@@ -1,1 +1,4 @@
 node_modules
+public/js
+public/vendor
+public/browser.html
