@@ -30,6 +30,7 @@ DrumMachineHypermedia.prototype = {
 		// has the drum updated? 
 		if (this.currentVersion !== this.drum.get('etag')){
 			this.updateProjection();
+			this.currentVersion = this.drum.get('etag');
 		}
 
 		res.set('ETag', this.currentVersion);
@@ -84,6 +85,9 @@ DrumMachineHypermedia.prototype = {
 
 	embedded : function(){
 
+		if(!this._media){
+			this.updateProjection();
+		}
 		return this._media;
 
 	},
@@ -265,11 +269,12 @@ DrumMachineHypermedia.prototype = {
 						}
 					}
 				},
-				"edit-snare-pattern": {
+				"update-snare": {
 					"href": baseUri + "/update-snare",
 					"method": "PUT",
 					"properties": {
 						"snare": this.drum.get('snare'),
+						"etag" : etag
 					},
 					"schema" : {
 						"snare" : {
@@ -281,11 +286,12 @@ DrumMachineHypermedia.prototype = {
 						}
 					}
 				},
-				"edit-hihat-open-pattern": {
+				"update-hihat-open": {
 					"href": baseUri + "/update-hihat-open",
 					"method": "PUT",
 					"properties": {
 						"hihat-open": this.drum.get('hihat-open'),
+						"etag" : etag
 					},
 					"schema" : {
 						"hihat-open" : {
@@ -297,11 +303,12 @@ DrumMachineHypermedia.prototype = {
 						}
 					}
 				},
-				"edit-hihat-closed-pattern": {
+				"update-hihat-closed": {
 					"href": baseUri + "/update-hihat-closed",
 					"method": "PUT",
 					"properties": {
 						"hihat-closed": this.drum.get('hihat-closed'),
+						"etag" : etag
 					},
 					"schema" : {
 						"hihat-closed" : {
@@ -313,11 +320,12 @@ DrumMachineHypermedia.prototype = {
 						}
 					}
 				},
-				"edit-crash-pattern": {
+				"update-crash": {
 					"href": baseUri + "/update-crash",
 					"method": "PUT",
 					"properties": {
 						"crash": this.drum.get('crash'),
+						"etag" : etag
 					},
 					"schema" : {
 						"crash" : {
@@ -329,11 +337,12 @@ DrumMachineHypermedia.prototype = {
 						}
 					}
 				},
-				"edit-tom-lo-pattern": {
+				"update-tom-lo": {
 					"href": baseUri + "/update-tom-lo",
 					"method": "PUT",
 					"properties": {
 						"tom-lo": this.drum.get('tom-lo'),
+						"etag" : etag
 					},
 					"schema" : {
 						"tom-lo" : {
@@ -345,11 +354,12 @@ DrumMachineHypermedia.prototype = {
 						}
 					}
 				},
-				"edit-tom-hi-pattern": {
+				"update-tom-hi": {
 					"href": baseUri + "/update-tom-hi",
 					"method": "PUT",
 					"properties": {
 						"tom-hi": this.drum.get('tom-hi'),
+						"etag" : etag
 					},
 					"schema" : {
 						"kick" : {
@@ -364,6 +374,8 @@ DrumMachineHypermedia.prototype = {
 
 			}
 		};
+
+		return this;
 
 	}
 

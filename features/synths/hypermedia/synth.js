@@ -28,6 +28,7 @@ SynthHypermedia.prototype = {
 		// has the drum updated? 
 		if (this.currentVersion !== this.synth.get('etag')){
 			this.updateProjection();
+			this.currentVersion = this.synth.get('etag');
 		}
 
 		res.set('ETag', this.currentVersion);
@@ -82,6 +83,9 @@ SynthHypermedia.prototype = {
 
 	embedded : function (){
 
+		if(!this._media){
+			this.updateProjection();
+		}
 		return this._media;
 
 	},
@@ -148,6 +152,7 @@ SynthHypermedia.prototype = {
 				}
 			},
 			"etag" : get('etag'),
+			"style" : get('style'),
 			"waveform": get('waveform'),
 			"filter-frequency": get('filter-frequency'),
 			"filter-kbd-follow": get('filter-kbd-follow'),
@@ -158,7 +163,9 @@ SynthHypermedia.prototype = {
 			"release": get('release'),
 			"volume" : get('volume'),
 			"tracker": this.synth.attributes.trackerNotes
-		}
+		};
+
+		return this;
 
 	}
 };

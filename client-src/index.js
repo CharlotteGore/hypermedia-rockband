@@ -1,0 +1,1 @@
+window.Model = require('hyperbone-model-with-io').Model;

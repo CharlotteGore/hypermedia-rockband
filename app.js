@@ -32,9 +32,15 @@ if ('development' == app.get('env')) {
 
 require('./shared/store').Store({ db : 'hyperdev'}, function (err, db){
 
-	require('./features/drummachines/handlers/drum.js').handler( app, db);
-	require('./features/synths/handlers/synth.js').handler( app, db);
+	_.each(['drummachines/drum', 'synths/synth', 'songs/song'], function( str ){
+		var bits = str.split('/');
+		require('./features/' + bits[0] + "/handlers/" + bits[1]).handler(app, db);
+	});
 
+});
+
+app.get('/', function(req, res){
+	res.sendfile('./public/home.html');
 });
 
 app.get('/api', function(req, res){
@@ -46,6 +52,9 @@ app.get('/api', function(req, res){
 			},
 			"create-synth" : {
 				href : '/create-synth'
+			},
+			'create-song' : {
+				href : '/create-song'
 			}
 		}
 	});

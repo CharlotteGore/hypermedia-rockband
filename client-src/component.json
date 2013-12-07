@@ -1,0 +1,20 @@
+{
+  "name": "hypermedia-rockband",
+  "repo": "charlottegore/hypermedia-rockbandui",
+  "description": "The basic initial UI for hypermedia rockband",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {
+    "green-mesa/hyperbone-model-with-io": "*",
+    "green-mesa/hyperbone-view": "*",
+    "green-mesa/hyperbone-router": "*",
+    "green-mesa/hyperbone-view-commands": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": [
+    "index.js"
+  ],
+  "remotes": []
+}
