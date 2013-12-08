@@ -1712,29 +1712,31 @@
         _.each(self.attributes, function(val, attr) {
           // only interested in backbone style top level key values.
           if (!_.isObject(val)) {
-            _.each(self._commands.attributes, function(cmd) {
-              var props = cmd.properties();
-              if (props.get(attr) === val) {
-                // we have a pair!!!
-                var ev = {
-                  event: "change:" + attr,
-                  handler: function(model, newVal) {
-                    var curVal = props.get(attr);
-                    if (curVal !== newVal) {
-                      props.set(attr, newVal);
+            if (self._commands) {
+              _.each(self._commands.attributes, function(cmd) {
+                var props = cmd.properties();
+                if (props.get(attr) === val) {
+                  // we have a pair!!!
+                  var ev = {
+                    event: "change:" + attr,
+                    handler: function(model, newVal) {
+                      var curVal = props.get(attr);
+                      if (curVal !== newVal) {
+                        props.set(attr, newVal);
+                      }
                     }
-                  }
-                };
-                props.on(ev.event, function(model, newVal) {
-                  var curVal = self.get(attr);
-                  if (curVal !== newVal) {
-                    self.set(attr, newVal);
-                  }
-                });
-                self.on(ev.event, ev.handler);
-                self.syncEvents.push(ev);
-              }
-            });
+                  };
+                  props.on(ev.event, function(model, newVal) {
+                    var curVal = self.get(attr);
+                    if (curVal !== newVal) {
+                      self.set(attr, newVal);
+                    }
+                  });
+                  self.on(ev.event, ev.handler);
+                  self.syncEvents.push(ev);
+                }
+              });
+            }
           }
         });
       },
@@ -4488,7 +4490,8 @@
   require.register("hyperbone-model-with-io", function(exports, require, module) {
     var request = require("superagent");
     var _ = require("underscore");
-    module.exports.Model = require("hyperbone-model").Model.extend({
+    var Model;
+    module.exports.Model = Model = require("hyperbone-model").Model.extend({
       fetch: function(uri) {
         var self = this;
         if (uri) this.url(uri);
@@ -4983,7 +4986,7 @@
         for (var i = 0, option; option = el.options[i]; i++) {
           found = 0;
           for (var j = 0, v; v = vals[j]; j++) {
-            found |= v === option.value;
+            found |= v.toString() === option.value;
           }
           option.selected = found === 1;
         }
@@ -5830,7 +5833,7 @@
       }
     }
   })
-  require.register("green-mesa-hyperbone-view", function(exports, require, module) {
+  require.register("hyperbone-view", function(exports, require, module) {
     var _ = require("underscore"), dom = require("dom"), regex = {
       alias: /^[A-Za-z0-9\_\-\.]+$/,
       helper: /^([A-Za-z\_\-\.]+)\(([A-Za-z0-9\_\.]+)\)$/,
@@ -6673,7 +6676,7 @@
       return params;
     };
   })
-  require.register("green-mesa-hyperbone-router", function(exports, require, module) {
+  require.register("hyperbone-router", function(exports, require, module) {
     var _ = require("underscore");
     var Route = require("route");
     var hashchange = require("hashchange");
@@ -6770,7 +6773,7 @@
       routes = [];
     };
   })
-  require.register("green-mesa-hyperbone-view-commands", function(exports, require, module) {
+  require.register("hyperbone-view-commands", function(exports, require, module) {
     /**
  * 
  * Commands for Hyperbone View
@@ -6897,8 +6900,312 @@
       }
     };
   })
+  require.register("hrb-extended-view-engine", function(exports, require, module) {
+    var defaultViewEngine = require("hyperbone-view");
+    defaultViewEngine.use(require("hyperbone-view-commands"));
+    defaultViewEngine.use({
+      templateHelpers: {
+        // any template helpers go here..
+        "if": function(val, str) {
+          return val ? str : "";
+        }
+      },
+      attributeHandlers: {}
+    });
+    module.exports.View = defaultViewEngine.HyperboneView;
+  })
+  require.register("song-list", function(exports, require, module) {
+    var Model = require("hyperbone-model-with-io").Model;
+    // the default is to have an empty list of songs...
+    // and we already know the uri...
+    var Songs = Model.extend({
+      defaults: {
+        _links: {
+          self: {
+            href: "/songs"
+          }
+        },
+        song: []
+      }
+    });
+    var songs = new Songs();
+    // only one real event of interest - add new form submitted
+    songs.on({
+      sync: function() {
+        this.set("bpm", this.command("add-song").get("properties.bpm"));
+        this.set({
+          loaded: true,
+          loading: false
+        });
+      },
+      "submit:add-song": function(cmd, execute) {
+        // not going to be other doing anything else...
+        execute();
+      }
+    });
+    module.exports = songs;
+  })
+  require.register("song", function(exports, require, module) {
+    var _ = require("underscore");
+    var Model = require("hyperbone-model-with-io").Model;
+    var Instrument = Model.extend({
+      syncCommands: true
+    });
+    var Song = Model.extend({
+      _prototypes: {
+        drummachine: Instrument,
+        synth: Instrument
+      },
+      defaults: {
+        drummachine: [],
+        synth: [],
+        "note-options": []
+      },
+      syncCommands: true
+    });
+    var song = new Song();
+    song.on({
+      sync: function() {
+        var drums = this.get("drummachine");
+        var self = this;
+        // copy the array pattern data into hyperbone models...
+        drums.each(function(drum, index) {
+          var holders = {};
+          _.each([ "kick", "snare", "hihat-open", "hihat-closed", "crash", "tom-hi", "tom-lo" ], function(type) {
+            holders[type] = [];
+            if (drum.get(type + "pattern")) {
+              _.each(drum.get(type), function(val, i) {
+                drum.get(type + "pattern").at(i).set({
+                  machine: index,
+                  button: i,
+                  active: val
+                });
+              }, this);
+            } else {
+              _.each(drum.get(type), function(val, i) {
+                holders[type].push({
+                  machine: index,
+                  button: i,
+                  active: val
+                });
+              }, this);
+              drum.set(type + "-pattern", holders[type]);
+            }
+          }, this);
+        }, this);
+        var synths = this.get("synth");
+        synths.each(function(synth, index) {
+          if (synth.get("style") === "lead") {
+            synth.set("is-lead", true);
+          }
+          // we want to remember which model it is for later...
+          synth.set({
+            clean: true,
+            machine: index
+          });
+          if (synth.get("intensity") === "") {
+            synth.set("intensity", 1);
+          }
+          synth.get("tracker").each(function(track) {
+            track.set({
+              clean: true,
+              machine: index
+            });
+          });
+        });
+        self.set("loaded", true);
+        self.set("loading", false);
+      },
+      "submit:add-electro-drum-machine submit:add-rock-drum-machine submit:add-lead-synth submit:add-bass-synth": function(cmd, execute) {
+        execute();
+      },
+      "submit:update-settings": function(cmd, execute) {
+        this.set("editing", false);
+        execute();
+      },
+      "change:update-settings:synth": function(command) {
+        command._parentModel.set("clean", false);
+      },
+      "save:synth": function(model) {
+        model.set("clean", true);
+      },
+      "submit:update-settings:synth": function(cmd, execute) {
+        var self = this;
+        this.set("loading", true);
+        execute(function() {
+          self.fetch();
+        });
+      },
+      "change:note:tracker:synth change:octave:tracker:synth change:intensity:tracker:synth": function(model) {
+        if (!this.get("loading")) {
+          model.set("clean", false);
+        }
+      },
+      "commit-track:tracker:synth": function(model) {
+        // so this is a bit of a tricky one. For one, we get a reference to the tracker note but 
+        // because this doesn't have its own command we need to get a reference to teh parent 
+        // synth. 
+        // Then, to make matters worse, if someone changes a bunch of tracker notes and then clicks save,
+        // this instantly loses all the changes except for the ones we've just saved... so..
+        var self = this;
+        // remember we kept an reference to the index within the collection earlier?
+        var synth = this.get("synth").at(model.get("machine"));
+        var props = synth.command("update-tracker").properties();
+        var tracker = synth.get("tracker");
+        var batch = [];
+        tracker.each(function(track) {
+          if (!track.get("clean")) {
+            batch.push({
+              slot: track.get("slot"),
+              intensity: track.get("intensity"),
+              octave: track.get("octave"),
+              note: track.get("note")
+            });
+          }
+        });
+        if (batch.length > 1) {
+          props.set("batch", batch);
+        } else {
+          props.set({
+            note: model.get("note"),
+            octave: model.get("octave"),
+            intensity: model.get("intensity"),
+            slot: model.get("slot")
+          });
+        }
+        synth.execute("update-tracker", function() {
+          // we update the song after we're done
+          self.fetch();
+        });
+      },
+      "change:active:kick-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("kick");
+        arr[model.get("button")] = val;
+        drum.command("update-kick").properties().set("kick", arr);
+        self.set("loading", true);
+        drum.execute("update-kick", function() {
+          self.fetch();
+        });
+      },
+      "change:active:snare-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("snare");
+        arr[model.get("button")] = val;
+        drum.command("update-snare").properties().set("snare", arr);
+        self.set("loading", true);
+        drum.execute("update-snare", function() {
+          self.fetch();
+        });
+      },
+      "change:active:hihat-open-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("hihat-open");
+        arr[model.get("button")] = val;
+        self.set("loading", true);
+        drum.command("update-hihat-open").properties().set("hihat-open", arr);
+        drum.execute("update-hihat-open", function() {
+          self.fetch();
+        });
+      },
+      "change:active:hihat-closed-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("hihat-closed");
+        arr[model.get("button")] = val;
+        self.set("loading", true);
+        drum.command("update-hihat-closed").properties().set("hihat-closed", arr);
+        drum.execute("update-hihat-closed", function() {
+          self.fetch();
+        });
+      },
+      "change:active:crash-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("crash");
+        arr[model.get("button")] = val;
+        self.set("loading", true);
+        drum.command("update-crash").properties().set("crash", arr);
+        drum.execute("update-crash", function() {
+          self.fetch();
+        });
+      },
+      "change:active:tom-hi-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("tom-hi");
+        arr[model.get("button")] = val;
+        self.set("loading", true);
+        drum.command("update-tom-hi").properties().set("tom-hi", arr);
+        drum.execute("update-tom-hi", function() {
+          self.fetch();
+        });
+      },
+      "change:active:tom-lo-pattern:drummachine": function(model, val) {
+        var self = this;
+        var drum = this.get("drummachine").at(model.get("machine"));
+        var arr = drum.get("tom-lo");
+        arr[model.get("button")] = val;
+        self.set("loading", true);
+        drum.command("update-tom-lo").properties().set("tom-lo", arr);
+        drum.execute("update-tom-lo", function() {
+          self.fetch();
+        });
+      }
+    });
+    module.exports = song;
+  })
   require.register("hypermedia-rockband", function(exports, require, module) {
-    window.Model = require("hyperbone-model-with-io").Model;
+    var Model = require("hyperbone-model-with-io").Model;
+    var View = require("hrb-extended-view-engine").View;
+    var Router = require("hyperbone-router").Router;
+    // set up some basic Models here. Eventually they'll get shoved off into their own modules.
+    var Instrument = Model.extend({
+      syncCommands: true
+    });
+    // one model for each route. These are route models.
+    window.app = new Model({
+      songList: require("song-list"),
+      song: require("song"),
+      previewSynth: new Instrument(),
+      previewDrum: new Instrument()
+    });
+    // initialise our view now. Give it the data we need later.
+    new View({
+      model: app,
+      el: document.getElementById("hypermedia-rockband")
+    });
+    var router = new Router();
+    router.route("/songs", app.get("songList")).on("activate", function(ctx, uri) {
+      var songList = app.get("songList");
+      songList.url(uri).set({
+        loading: true,
+        loaded: false
+      }).fetch();
+    }).route("/song/:slug", app.get("song")).on("activate", function(ctx, uri) {
+      var song = app.get("song");
+      song.url(uri).set({
+        loading: true,
+        loaded: false
+      }).fetch();
+    }).route("/drummachine/:slug", app.get("previewDrum")).on("activate", function(ctx, uri) {
+      var previewDrum = app.get("previewDrum");
+      previewDrum.url(uri).set({
+        loading: true,
+        loaded: false
+      }).fetch();
+    }).route("/synth/:slug", app.get("previewSynth")).on("activate", function(ctx, uri) {
+      var previewSynth = app.get("previewSynth");
+      previewSynth.url(uri).set({
+        loading: true,
+        loaded: false
+      }).fetch();
+    }).route("").on("activate", function() {
+      router.navigateTo("/songs");
+    }).listen();
   })
     require("hypermedia-rockband");
 })();

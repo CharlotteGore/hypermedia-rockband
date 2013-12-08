@@ -1,6 +1,8 @@
 var _ = require('underscore');
 var uuid = require('node-uuid');
 
+var broker = require('../../../shared/broker.js');
+
 var styles = {
 	'lead' : {
 		"slot" : {
@@ -11,6 +13,10 @@ var styles = {
 		"note" : {
 			"type" : "select",
 			"options" : [
+				{
+					name : "--",
+					value : ""
+				},
 				{
 					name : "C",
 					value : "c"
@@ -42,6 +48,10 @@ var styles = {
 			type : "range",
 			min : 0,
 			max : 1
+		},
+		"batch" : {
+			type : "array",
+			description : "An array of JSON objects containing slot, note, octave and intensity data"
 		}
 	},
 	'bass' : {
@@ -84,9 +94,13 @@ var styles = {
 			type : "range",
 			min : 0,
 			max : 1
+		},
+		"batch" : {
+			type : "array",
+			description : "An array of JSON objects containing slot, note, octave and intensity data, for updating multiple slots at once"
 		}
 	}
-}
+};
 
 var Synth = function( data, store ){
 
@@ -112,7 +126,7 @@ var Synth = function( data, store ){
 	for (var i = 0; i < styles.lead.slot.max; i++){
 		this.attributes.trackerNotes.push({
 			note : "",
-			intensity : "",
+			intensity : 1,
 			octave : "",
 			slot : i + 1
 		});
@@ -135,7 +149,7 @@ var Synth = function( data, store ){
 					},
 					{
 						name : 'Triangle',
-						value : 'sine'
+						value : 'triangle'
 					},
 					{
 						name : 'Sine',
@@ -200,7 +214,7 @@ Synth.prototype = {
 
 		_.each(data, function(val, key){
 
-			if(this.schema[key]){
+			if(this.schema.settings[key]){
 
 				var schema = this.schema.settings[key];
 
@@ -247,71 +261,85 @@ Synth.prototype = {
 
 		var errs = [], trackerNote;
 
-		if(_.isUndefined(data.slot)){
-			return 'Invalid tracker note slot specified'
-		} else {
-			trackerNote = this.attributes.trackerNotes[data.slot -1];
-
-			if(!trackerNote){
-				return "Invalid tracker note slot specified";
-			}
+		if(!_.isArray(data.batch)){
+			data.batch = [
+				{
+					slot : data.slot || false,
+					note : data.note || false,
+					intensity : data.intensity || false,
+					octave : data.octave || false
+				}
+			];
 		}
 
-		if(data.note === ""){
+		_.each(data.batch, function (data){
 
-			trackerNote.note = "";
-			trackerNote.octave = "";
-
-		} else {
-
-			if(!_.find(this.schema.tracker.note.options, function( note ){ return note.value === data.note; })){
-				errs.push('Invalid note specified');
+			if(_.isUndefined(data.slot)){
+				return 'Invalid tracker note slot specified';
 			} else {
-				trackerNote.note = data.note;
+				trackerNote = this.attributes.trackerNotes[data.slot -1];
 
-				if(!data.octave && !trackerNote.octave){
-					trackerNote.octave = 3;
-				}
-				if(!data.intensity && !trackerNote.intensity){
-					trackerNote.intensity = 1;
+				if(!trackerNote){
+					return "Invalid tracker note slot specified";
 				}
 			}
-		}
 
-		if(data.intensity){
-			var intensity = parseFloat(data.intensity);
+			if(data.note === ""){
 
-			if (intensity < this.schema.tracker.intensity.min || intensity > this.schema.tracker.intensity.max){
-				errs.push('Intensity out of range');
+				trackerNote.note = "";
+				trackerNote.octave = "";
+
 			} else {
-				trackerNote.intensity = intensity;
+
+				if(!_.find(this.schema.tracker.note.options, function( note ){ return note.value === data.note; })){
+					errs.push('Invalid note specified');
+				} else {
+					trackerNote.note = data.note;
+
+					if(!data.octave && !trackerNote.octave){
+						trackerNote.octave = 3;
+					}
+					if(!data.intensity && !trackerNote.intensity){
+						trackerNote.intensity = 1;
+					}
+				}
 			}
-		}
 
-		if(data.octave){
-			var octave = parseFloat(data.octave);
+			if(data.intensity){
+				var intensity = parseFloat(data.intensity);
 
-			if (octave < this.schema.tracker.octave.min || intensity > this.schema.tracker.octave.max){
-				errs.push('Intensity out of range');
-			} else {
-				trackerNote.octave = octave;
+				if (intensity < styles[this.attributes.style].intensity.min|| intensity > styles[this.attributes.style].intensity.max){
+					errs.push('Intensity out of range');
+				} else {
+					trackerNote.intensity = intensity;
+				}
 			}
-		}
 
-		if(errs){
+			if(data.octave){
+				var octave = parseFloat(data.octave);
+
+				if (octave < styles[this.attributes.style].octave.min || octave > styles[this.attributes.style].octave.max){
+					errs.push('Octave out of range');
+				} else {
+					trackerNote.octave = octave;
+				}
+			}
+
+		}, this);
+
+		if(errs.length > 0){
 			return errs.join('.');
 		} else {
 			return false;
 		}
 
 	},
-
 	save : function (callback){
 		var self = this;
 		this.attributes.etag = uuid.v4();
 		this.store.collection("synths").update({ slug : this.attributes.slug}, this.attributes, {safe : true, upsert : true}, function(err, data){
 			if (!err){
-				callback(err, self);
+				broker.emit('instrument-updated', self.attributes.song, function(){ callback(err, self);});
 			}
 		});
 		return this;

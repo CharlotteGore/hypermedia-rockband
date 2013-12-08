@@ -32,7 +32,7 @@ if ('development' == app.get('env')) {
 
 require('./shared/store').Store({ db : 'hyperdev'}, function (err, db){
 
-	_.each(['drummachines/drum', 'synths/synth', 'songs/song'], function( str ){
+	_.each(['drummachines/drum', 'synths/synth', 'songs/song', 'songs/songs'], function( str ){
 		var bits = str.split('/');
 		require('./features/' + bits[0] + "/handlers/" + bits[1]).handler(app, db);
 	});

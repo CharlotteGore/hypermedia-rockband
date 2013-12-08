@@ -1,8 +1,333 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+@import "fonts.less";
+
+@ultramarine : rgb(7, 37, 63);
+@white : rgb(255, 255, 255);
+@purp : rgb(159, 124, 192);
+@yuck : rgb(0, 191, 255);
+@black: rgb(40,40,40);
+
+.nomargin {
+	margin: 0;
+}
+.nopadding {
+	padding: 0;
 }
 
-a {
-  color: #00B7FF;
+.stdpadding {
+	padding: 20px;
+}
+
+.stdmargin {
+	margin: 20px;
+}
+
+body, section, article, h1, h2, h3, h5, h6, ul, li, ol {
+	.nomargin;
+	.nopadding;
+}
+
+body {
+  font: 14px "OrbitronLight","Lucida Grande", Helvetica, Arial, sans-serif;
+
+  button {
+  	border : 0;
+  	font-family: "OrbitronBlack";
+  	cursor : pointer;
+  }
+
+	form {
+		padding: 20px;
+		display: flex;
+		flex-direction: column;
+
+		& fieldset > section, > section {
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			align-content: flex-start;
+
+			& > label {
+				width: 180px
+			}
+
+			& > span {
+				display: inline-block;
+				width: 70px;
+			}
+
+			& > input, button {
+				flex: 1 1 0;
+				padding: 10px;
+				font-size: 16px;
+				font-family: "OrbitronMedium";
+				border: 0;
+			}
+
+		}
+	}
+
+  section#hypermedia-rockband {
+
+  	display: flex;
+  	flex-direction: column;
+  	min-height: 100vh;
+
+  	header {
+  		display: flex;
+		background: @black;
+		color : @white;
+		justify-content: center;
+		padding: 20px;
+		h1 {
+			font-size: 80px;
+			text-shadow: 0px 0px 50px rgba(255,255,255,0.5);
+		}
+
+		h2 {
+			margin-right: 20px;
+		}
+	}
+
+	& > section {
+		display: flex;
+	}
+
+	& > section.song {
+
+		flex-direction: column;
+
+		& > section {
+
+			display: flex;
+			flex-direction: row;
+
+			& > section {
+
+				flex: 1 1 0;
+				display: flex;
+				flex-direction: column;
+
+				section.drum-machines {
+					flex: 1 1 0;
+					display: flex;
+					flex-direction: column;
+
+					article {
+						display: flex;
+						flex-direction: column;
+						
+						align-content: stretch;
+						align-items: stretch;
+						padding: 20px;
+
+						h2 {
+							text-align: center;
+							background: rgb(245, 245, 245);
+							margin: 16px;
+							-webkit-transform: rotateX(-5deg) rotateY(10deg);
+						}
+
+						section {
+							display: flex;
+							align-content: stretch;
+							margin: 10px;
+
+							button {
+								flex-grow: 0.6;
+								height: 30px;
+								border: 0;
+								outline : none;
+
+								&.active {
+									background: limegreen;
+									box-shadow: 0px 0px 20px limegreen;
+								}
+							}
+						}
+					}
+				}
+
+				section.synths{
+					flex: 1 1 0;
+					display: flex;
+					flex-direction: column;
+
+					article {
+						display: flex;
+						flex-direction: column;
+						
+						align-content: stretch;
+						align-items: stretch;
+						padding: 20px;
+
+						h2 {
+							text-align: center;
+							background: rgb(245, 245, 245);
+							margin: 16px;
+							-webkit-transform: rotateX(-5deg) rotateY(10deg);
+						}
+
+						section {
+							display: flex;
+							align-content: stretch;
+							margin: 10px;
+
+							button {
+								flex-grow: 0.6;
+								height: 30px;
+								border: 0;
+								outline : none;
+
+								&.active {
+									background: limegreen;
+									box-shadow: 0px 0px 20px limegreen;
+								}
+							}
+						}
+					}
+
+
+					section.tracker {
+						display: block!important;
+						height: 400px;
+						overflow: auto;
+						margin: 20px;
+						& > section {
+							display: flex;
+							align-items : center;
+							background: @white;
+							span {
+								display: inline-block;
+								width: 100px;
+								&.slot{
+									width: 50px;
+								}
+							}
+							input {
+								flex-grow: 1;
+								width: auto;
+								border: 1px solid rgb(200, 200, 200);
+								padding: 5px;
+								font-family: "OrbitronBold";
+								font-size: 18px;
+							}
+
+							button {
+								width: 0px;
+								background: @white;
+								height : 33px;
+							}
+
+							&:nth-child(4n+1){
+								background : rgb(200,200,200);
+							}
+						}
+					}
+				}
+
+
+			}
+
+		}
+
+		section.synths {
+			flex: 1 1 0;
+		}
+
+		&.loading {
+			cursor:progress!important;
+			button {
+				cursor:progress!important;
+			}
+
+		}
+
+	}
+
+	& > section.songs {
+		flex-direction: row;
+		align-content: stretch;
+		flex-grow: 1;
+
+		h2 {
+			flex-grow: 0.1;
+			background: @purp;
+			align-items: center;
+			display: flex;
+			justify-content: center;
+		}
+
+		section.song-list {
+			flex-grow : 1;
+			article {
+				padding: 50px;
+				display: flex;
+				flex: 1;
+
+				& > img {
+					flex-shrink : 0;
+					display: block;
+					margin-right: 20px;
+				}
+
+				& > section {
+					display: block;
+					p {
+						span {
+							color: @ultramarine;
+						}
+					}
+				}
+
+				h3 {
+					flex: 1 1 0;
+					font-size: 42px;
+					justify-content: center;
+					margin: auto;
+					a{
+						text-decoration: none;
+						color: rgb(40, 40, 40)!important;
+					}
+				}
+			}
+		}
+
+		form {
+			padding: 50px;
+			flex-grow: 0.1;
+			display: flex;
+			flex-direction: column;
+			background: @yuck;
+
+			& > section {
+				display: flex;
+				align-items: center;
+				height: 10vh;
+				justify-content: flex-start;
+				align-content: flex-start;
+
+				& > label {
+					width: 180px
+				}
+
+				& > input, button {
+					flex: 1 1 0;
+					padding: 10px;
+					font-size: 16px;
+					font-family: "OrbitronMedium";
+					border: 0;
+				}
+
+
+
+				span.bpm {
+					display: inline-block;
+					width: 34px;
+					text-align: center;
+				}
+			}
+		}
+	}
+
+  }
 }

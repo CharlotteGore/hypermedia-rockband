@@ -1,6 +1,8 @@
 var _ = require('underscore');
 var uuid = require('node-uuid');
 
+var broker = require('../../../shared/broker.js');
+
 var styles = {
 	'default' : {
 		'name' : 'Rock',
@@ -92,7 +94,7 @@ DrumMachine.prototype = {
 		this.attributes.etag = uuid.v4();
 		this.store.collection("drummachines").update({ slug : this.attributes.slug}, this.attributes, {safe : true, upsert : true}, function(err, data){
 			if (!err){
-				callback(err, self);
+				broker.emit('instrument-updated', self.attributes.song, function(){ callback(err, self);});
 			}
 		});
 		return this;

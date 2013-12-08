@@ -137,7 +137,7 @@ module.exports.handler = function (app, store){
 
 	app.post('/create-synth', function(req, res){
 
-		var synth = new Synth({ song : 'unknown'}, store);
+		var synth = new Synth({ song : 'unknown'}, store, "nolisten");
 
 		synth.save(function(err, data){
 

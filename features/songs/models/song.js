@@ -1,10 +1,14 @@
 var _ = require('underscore');
 var uuid = require('node-uuid');
 
-var Drum = require('../../drummachines/models/drum').DrumMachine;
-var Synth = require('../../synths/models/synth').Synth;
+var Drum = require('../../drummachines/models/drum.js').DrumMachine;
+var Synth = require('../../synths/models/synth.js').Synth;
 
-var Song = function( data, store ){
+var broker = require('../../../shared/broker.js');
+
+var Song = function( data, store, nolisten ){
+
+	var self = this;
 
 	this.store = store;
 
@@ -34,6 +38,13 @@ var Song = function( data, store ){
 			}
 		}
 	};
+	if(!nolisten){
+		broker.on('instrument-updated', function( slug, callback ){
+			if (slug === self.attributes.slug){
+				self.updateVersion(callback);
+			}
+		});
+	}
 };
 
 Song.prototype = {
@@ -131,12 +142,27 @@ Song.prototype = {
 	save : function (callback){
 		var self = this;
 		this.attributes.etag = uuid.v4();
-		this.store.collection("songs").update({ slug : this.attributes.slug}, this.attributes, {safe : true, upsert : true}, function(err, data){
+		this.store.collection("songs").update({ slug : this.attributes.slug}, this.attributes, {w:1, upsert : true}, function(err, data){
 			if (!err){
 				callback(err, self);
 			}
 		});
 		return this;
+	},
+	updateVersion : function(callback){
+		var self = this;
+		this.attributes.etag = uuid.v4();
+		this.store.collection("songs").update({ slug : this.attributes.slug}, {$set:{etag : this.attributes.etag}}, {w : 1}, function(err, data){
+			if(!err){
+				self.load(function(err, data){
+					if(!err){
+						callback();
+					} else {
+						callback(err, data);
+					}
+				});
+			}
+		});
 	},
 	load : function (callback){
 		var self = this;

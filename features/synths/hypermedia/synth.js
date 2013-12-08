@@ -4,7 +4,7 @@ var SynthHypermedia = function (synth){
 	this.slug = synth.get('slug');
 
 	this.currentVersion = "";
-	this._media = {};
+	this._media = false;
 
 };
 
@@ -146,7 +146,9 @@ SynthHypermedia.prototype = {
 						"slot" : "",
 						"note" : "",
 						"octave" : "",
-						"intensity" : ""
+						"intensity" : "",
+						"batch" : "",
+						"etag" : get('etag')
 					},
 					"schema" : this.synth.schema.tracker
 				}

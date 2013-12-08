@@ -2,8 +2,226 @@
 <html>
 <head>
 	<title>Hypermedia Rockband</title>
+	<link href="/styles.css" rel="stylesheet" media="screen">
 </head>
 <body>
+	<section id="hypermedia-rockband">
+		<!-- List of songs -->
+		<header>
+			<h1>Hypermedia Rockband</h1>
+		</header>
+		<section class="songs {{if(model.get('loading'), 'loading')}}" hb-with="songList" if="active">
+			<form hb-with-command="add-song">
+					<section>
+						<label for="name">Song name</label>
+						<input name="name">
+					</section>
+					<section>
+						<label for="bpm">Beats per minute</label>
+						<input name="bpm" type="range" min="60" max="180" step="10" hb-sync-with="bpm"><span class="bpm">{{bpm}}</span>
+					</section>
+					<section>
+						<label for="complete">Complete</label>
+						<button>Create song</button>
+					</section>
+			</form>
+			<section class="song-list" hb-with="song">
+				<article class="song-summary">
+					<img src="/images/song.svg"><h3><a href="#!{{url()}}">{{name}}</a></h3>
+					<section>
+						<p><span>Instruments</span> {{instruments}}</p>
+						<p><span>BPM</span> {{bpm}}</p>
+						<p><span>Time signature</span> {{time-signature}}</p>
+					</section>
+				</article>
+			</section>
+		</section>
+		<!-- A Song -->
+		<section class="song {{if(model.get('loading'), 'loading')}}" hb-with="song" if="active">
+
+			<header>
+				<h2 if-not="editing">{{name}}</h2>
+				<button if-not="editing" hb-click-toggle="editing">Edit Song Information</button>
+				<section if="editing">
+					<button hb-click-toggle="editing">Cancel</button>
+					<form hb-with-command="update-settings">
+							<section>
+								<label for="name">Song name</label>
+								<input name="name">
+							</section>
+							<section>
+								<label for="bpm">Beats per minute</label>
+								<input name="bpm" type="range" min="60" max="180" step="10" hb-sync-with="bpm"><span class="bpm">{{bpm}}</span>
+							</section>
+							<section>
+								<label for="complete">Complete</label>
+								<button>Update</button>
+							</section>
+					</form>
+				</section>
+			</header>
+			<section>
+				<section>
+					<form hb-with-command="add-electro-drum-machine">
+						<section>
+							<button>Add Electronic Drum Machine</button>
+						</section>
+					</form>
+					<form hb-with-command="add-rock-drum-machine">
+						<section>
+							<button>Add Rock Drum Machine</button>
+						</section>
+					</form>
+					<section class="drum-machines" hb-with="drummachine">
+						<article class="{{style}}">
+							<h2>{{name}} Drum Machine</h2>
+							<h3>Kick</h3>
+							<section hb-with="kick-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+							<h3>Snare</h3>
+							<section hb-with="snare-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+							<h3>Open Hi hat</h3>
+							<section hb-with="hihat-open-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+							<h3>Closed Hi Hat</h3>
+							<section hb-with="hihat-closed-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+							<h3>Crash</h3>
+							<section hb-with="crash-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+							<h3>High Toms</h3>
+							<section hb-with="tom-lo-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+							<h3>Low Toms</h3>
+							<section hb-with="tom-hi-pattern">
+								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+							</section>
+						</article>
+					</section>
+				</section>
+				<section>
+					<section>
+					<form hb-with-command="add-bass-synth">
+						<section>
+							<button>Add Bass Synth</button>
+						</section>
+					</form>
+					<form hb-with-command="add-lead-synth">
+						<section>
+							<button>Add Lead Synth</button>
+						</section>
+					</form>
+						<section class="synths" hb-with="synth">
+							<article class="{{style}}">
+								<h2 if="is-lead">Lead Synth</h2>
+								<h2 if-not="is-lead">Bass Synth</h2>
+								<form hb-with-command="update-settings">
+									<fieldset>
+										<legend>Oscillator</legend>
+										<section>
+											<label for="waveform">Waveform</label>
+											<select name="waveform"></select>
+										</section>
+									</fieldset>
+									<fieldset>
+										<legend>Filter</legend>
+										<section>
+											<label for="filter-frequency">Frequency</label>
+											<input type="range" min="0" max="20000" name="filter-frequency"><span>{{filter-frequency}}hz</span>
+										</section>
+										<section>
+											<label for="filter-resonance">Resonance</label>
+											<input type="range" min="0" max="1" step="0.01" name="filter-resonance"><span>{{filter-resonance}}gain</span>
+										</section>
+									</fieldset>
+									<fieldset>
+										<legend>Envelope</legend>
+										<section>
+											<label for="attack">Attack</label>
+											<input type="range" min="0" max="1000" name="attack"><span>{{attack}}ms</span>
+										</section>
+										<section>
+											<label for="decay">Decay</label>
+											<input type="range" min="0" max="1000" name="decay"><span>{{decay}}ms</span>
+										</section>
+										<section>
+											<label for="sustain">Sustain</label>
+											<input type="range" min="0" max="1" step="0.01" name="sustain"><span>{{sustain}}gain<span>
+										</section>
+										<section>
+											<label for="release">Release</label>
+											<input type="range" min="0" max="10000" name="release"><span>{{release}}ms</span>
+										</section>
+									</fieldset>	
+									<section if-not="clean">
+										<label>Save</label>
+										<button hb-trigger="save">Save changes</button>
+									</section>							
+								</form>
+								<h4>Tracker</h4>
+								<section class="tracker" hb-with="tracker">
+									<section dblclick-to-edit>
+										<span class="slot">{{slot}}</span>
+										<select hb-bind="note">
+											<option value="">--</option>
+											<option value="c">C</option>
+											<option value="eb">E&#9837;</option>
+											<option value="f">F</option>
+											<option value="g">G</option>
+											<option value="bb">BE&#9837;</option>
+										</select>
+										<select if="is-lead" hb-bind="octave">
+											<option value="">--</option>
+											<option value=2>2</option>
+											<option value=3>3</option>
+											<option value=4>4</option>
+											<option value=5>5</option>
+											<option value=6>6</option>
+											<option value=7>7</option>
+										</select>
+										<select if-not="is-lead" hb-bind="octave">
+											<option value="">--</option>
+											<option value=0>0</option>
+											<option value=1>1</option>
+											<option value=2>2</option>
+											<option value=3>3</option>
+										</select>
+										<input hb-bind="intensity" type="range" min="0" max="1" step="0.01"><span>{{intensity}} gain</span>
+										<button if-not="clean" hb-trigger="commit-track">Save</button>
+										<button if="clean"></button>
+									</section>
+								</section>
+								<datalist id="notes">
+									<option value="C">
+									<option value="E&#9837;">
+									<option value="F">
+									<option value="G">
+									<option value="B&#9837;">
+								</datalist>
+							</article>
+						</section>
+					</section>
+				</section>
+
+			</section>
+
+		</section>
+		<!-- preview of drum kit -->
+		<section  hb-with="previewDrum" if="active">
+			<h2>Preview Drum machine</h2>
+		</section>
+		<!-- preview of synth -->
+		<section hb-with="previewDrum" if="active">
+			<h2>Preview Synth</h2>
+		</section>
+	</section>
 <script src="/javascripts/hypermedia-rockband.js"></script>
 </body>
 </html>

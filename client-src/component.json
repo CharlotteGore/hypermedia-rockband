@@ -16,5 +16,13 @@
   "scripts": [
     "index.js"
   ],
-  "remotes": []
+  "remotes": [],
+  "paths" : [
+    "lib"
+  ],
+  "local" : [
+    "hrb-extended-view-engine",
+    "song-list",
+    "song"
+  ]
 }

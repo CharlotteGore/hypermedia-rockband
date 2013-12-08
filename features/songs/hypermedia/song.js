@@ -9,7 +9,7 @@ var SongHypermedia = function (song){
 	this.slug = song.get('slug');
 
 	this.currentVersion = "";
-	this._media = {};
+	this._media = false;
 
 };
 
@@ -88,9 +88,48 @@ SongHypermedia.prototype = {
 
 	embedded : function (){
 
-		if(!this._media){
-			this.updateProjection();
-		}
+		var self = this;
+
+		var get = function(val){return self.song.get(val);};
+
+		var baseUri = "/song/" + get('slug');
+		var etag = get('etag');
+
+		this._media = {
+			"_links": {
+				"self": {
+					"href": baseUri
+				},
+				"song": {
+					"href": '/song/' + get('song')
+				},
+				"curies" : [
+					{
+						name : 'cmd',
+						templated : true,
+						href : '/commands/songs/rels/{rel}'
+					}
+				],
+				"cmd:add-electro-drum-machine" : {
+					href : baseUri + "/add/electro"
+				},
+				"cmd:add-rock-drum-machine" : {
+					href : baseUri + "/add/rock"
+				},
+				"cmd:add-lead-synth" : {
+					href : baseUri + "/add/lead"
+				},
+				"cmd:add-bass-synth" : {
+					href : baseUri + "/add/bass"
+				},
+			},
+			"etag" : get('etag'),
+			"name" : get('name'),
+			"bpm" : get('bpm'),
+			"time-signature" : "4/4",
+			"instruments" : get('instruments')
+		};
+
 		return this._media;
 
 	},
@@ -198,17 +237,17 @@ SongHypermedia.prototype = {
 
 		_.each(this.song.drums, function (drum){
 
-			var hypermedia = new DrumHypermedia(drum);
+			var hypermedia = new DrumHypermedia(drum).embedded();
 
-			self._media._embedded.drummachine.push( hypermedia.updateProjection().embedded() );
+			self._media._embedded.drummachine.push( hypermedia );
 
 		});
 
 		_.each(this.song.synths, function (synth){
 
-			var hypermedia = new SynthHypermedia(synth);
+			var hypermedia = new SynthHypermedia(synth).embedded();
 
-			self._media._embedded.synth.push( hypermedia.updateProjection().embedded() );
+			self._media._embedded.synth.push( hypermedia );
 
 		});
 

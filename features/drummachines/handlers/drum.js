@@ -104,8 +104,6 @@ module.exports.handler = function (app, store){
 			forDrum = req.body.drum;
 			pattern = req.body.pattern;
 
-			console.log(forDrum, pattern);
-
 		} else {
 			media.notAcceptable('Must have a drum to apply the pattern to', req, res);
 		}

@@ -1,0 +1,6 @@
+{
+	"name" : "song-list",
+	"scripts" : [
+		"index.js"
+	]
+}

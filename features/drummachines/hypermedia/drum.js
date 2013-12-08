@@ -4,7 +4,7 @@ var DrumMachineHypermedia = function (drum){
 	this.slug = drum.get('slug');
 
 	this.currentVersion = "";
-	this._media = {};
+	this._media = false;
 
 	return this;
 

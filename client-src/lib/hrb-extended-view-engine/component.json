@@ -1,0 +1,6 @@
+{
+	"name" : "hrb-extended-view-engine",
+	"scripts" : [
+		"index.js"
+	]
+}

@@ -1,67 +1,307 @@
-#browser #location-bar { margin: 10px 0; }
-
-#browser #location-bar .address {
-  border: 1px solid #999;
-  padding: 4px; margin: 0;
+@font-face {
+  font-family: 'OrbitronMedium';
+  src: url('/fonts/orbitron-medium-webfont.eot');
+  src: url('/fonts/orbitron-medium-webfont.eot?#iefix') format('embedded-opentype'), url('/fonts/orbitron-medium-webfont.woff') format('woff'), url('/fonts/orbitron-medium-webfont.ttf') format('truetype'), url('/fonts/orbitron-medium-webfont.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
 }
-
-#browser #headers-bar {
- border: 1px solid #888;
- padding: 5px
+@font-face {
+  font-family: 'OrbitronLight';
+  src: url('/fonts/orbitron-light-webfont.eot');
+  src: url('/fonts/orbitron-light-webfont.eot?#iefix') format('embedded-opentype'), url('/fonts/orbitron-light-webfont.woff') format('woff'), url('/fonts/orbitron-light-webfont.ttf') format('truetype'), url('/fonts/orbitron-light-webfont.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
 }
-
-#request-headers {
+@font-face {
+  font-family: 'OrbitronBold';
+  src: url('/fonts/orbitron-bold-webfont.eot');
+  src: url('/fonts/orbitron-bold-webfont.eot?#iefix') format('embedded-opentype'), url('/fonts/orbitron-bold-webfont.woff') format('woff'), url('/fonts/orbitron-bold-webfont.ttf') format('truetype'), url('/fonts/orbitron-bold-webfont.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'OrbitronBlack';
+  src: url('/fonts/orbitron-black-webfont.eot');
+  src: url('/fonts/orbitron-black-webfont.eot?#iefix') format('embedded-opentype'), url('/fonts/orbitron-black-webfont.woff') format('woff'), url('/fonts/orbitron-black-webfont.ttf') format('truetype'), url('/fonts/orbitron-black-webfont.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+.nomargin {
+  margin: 0;
+}
+.nopadding {
+  padding: 0;
+}
+.stdpadding {
+  padding: 20px;
+}
+.stdmargin {
+  margin: 20px;
+}
+body,
+section,
+article,
+h1,
+h2,
+h3,
+h5,
+h6,
+ul,
+li,
+ol {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font: 14px "OrbitronLight", "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+body button {
+  border: 0;
+  font-family: "OrbitronBlack";
+  cursor: pointer;
+}
+body form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+body form fieldset > section,
+body form > section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  align-content: flex-start;
+}
+body form fieldset > section > label,
+body form > section > label {
+  width: 180px;
+}
+body form fieldset > section > span,
+body form > section > span {
+  display: inline-block;
+  width: 70px;
+}
+body form fieldset > section > input,
+body form > section > input,
+body form fieldset > section button,
+body form > section button {
+  flex: 1 1 0;
+  padding: 10px;
+  font-size: 16px;
+  font-family: "OrbitronMedium";
+  border: 0;
+}
+body section#hypermedia-rockband {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+body section#hypermedia-rockband header {
+  display: flex;
+  background: #282828;
+  color: #ffffff;
+  justify-content: center;
+  padding: 20px;
+}
+body section#hypermedia-rockband header h1 {
+  font-size: 80px;
+  text-shadow: 0px 0px 50px rgba(255, 255, 255, 0.5);
+}
+body section#hypermedia-rockband header h2 {
+  margin-right: 20px;
+}
+body section#hypermedia-rockband > section {
+  display: flex;
+}
+body section#hypermedia-rockband > section.song {
+  flex-direction: column;
+}
+body section#hypermedia-rockband > section.song > section {
+  display: flex;
+  flex-direction: row;
+}
+body section#hypermedia-rockband > section.song > section > section {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+body section#hypermedia-rockband > section.song > section > section section.drum-machines {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+body section#hypermedia-rockband > section.song > section > section section.drum-machines article {
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+  align-items: stretch;
+  padding: 20px;
+}
+body section#hypermedia-rockband > section.song > section > section section.drum-machines article h2 {
+  text-align: center;
+  background: #f5f5f5;
+  margin: 16px;
+  -webkit-transform: rotateX(-5deg) rotateY(10deg);
+}
+body section#hypermedia-rockband > section.song > section > section section.drum-machines article section {
+  display: flex;
+  align-content: stretch;
+  margin: 10px;
+}
+body section#hypermedia-rockband > section.song > section > section section.drum-machines article section button {
+  flex-grow: 0.6;
+  height: 30px;
   border: 0;
   outline: none;
-  padding: 0;
-  resize: vertical;
-  width: 100%;
-  height: 40px;
-  margin-bottom: 0px;
-
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
 }
-
-.inspector { height: 100%; }
-
-.documentation { height: 100%; }
-.documentation iframe { width: 100%; height: 100%; }
-
-.modal input, .modal textarea {
-  width: 90%;
+body section#hypermedia-rockband > section.song > section > section section.drum-machines article section button.active {
+  background: limegreen;
+  box-shadow: 0px 0px 20px limegreen;
 }
-
-.modal textarea {
-  height: 100px;
+body section#hypermedia-rockband > section.song > section > section section.synths {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
 }
-
-.links .btn {
-  padding: 2px 5px 2px;
-  font-size: 12px;
-  line-height: 14px;
+body section#hypermedia-rockband > section.song > section > section section.synths article {
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+  align-items: stretch;
+  padding: 20px;
 }
-
-body table.table {
-  font-size: 11px;
+body section#hypermedia-rockband > section.song > section > section section.synths article h2 {
+  text-align: center;
+  background: #f5f5f5;
+  margin: 16px;
+  -webkit-transform: rotateX(-5deg) rotateY(10deg);
 }
-
-.location-bar-container {
-  line-height: 30px;
+body section#hypermedia-rockband > section.song > section > section section.synths article section {
+  display: flex;
+  align-content: stretch;
+  margin: 10px;
 }
-
-.ajax-loader {
-  vertical-align: middle;
-  background-image: url("./vendor/img/ajax-loader.gif");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  margin-left: 6px;
-  opacity: 0;
+body section#hypermedia-rockband > section.song > section > section section.synths article section button {
+  flex-grow: 0.6;
+  height: 30px;
+  border: 0;
+  outline: none;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths article section button.active {
+  background: limegreen;
+  box-shadow: 0px 0px 20px limegreen;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker {
+  display: block!important;
+  height: 400px;
+  overflow: auto;
+  margin: 20px;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker > section {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker > section span {
   display: inline-block;
-  transition: opacity 1s;
+  width: 100px;
 }
-.ajax-loader.visible {
-  opacity: 1;
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker > section span.slot {
+  width: 50px;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker > section input {
+  flex-grow: 1;
+  width: auto;
+  border: 1px solid #c8c8c8;
+  padding: 5px;
+  font-family: "OrbitronBold";
+  font-size: 18px;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker > section button {
+  width: 0px;
+  background: #ffffff;
+  height: 33px;
+}
+body section#hypermedia-rockband > section.song > section > section section.synths section.tracker > section:nth-child(4n+1) {
+  background: #c8c8c8;
+}
+body section#hypermedia-rockband > section.song section.synths {
+  flex: 1 1 0;
+}
+body section#hypermedia-rockband > section.song.loading {
+  cursor: progress!important;
+}
+body section#hypermedia-rockband > section.song.loading button {
+  cursor: progress!important;
+}
+body section#hypermedia-rockband > section.songs {
+  flex-direction: row;
+  align-content: stretch;
+  flex-grow: 1;
+}
+body section#hypermedia-rockband > section.songs h2 {
+  flex-grow: 0.1;
+  background: #9f7cc0;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+body section#hypermedia-rockband > section.songs section.song-list {
+  flex-grow: 1;
+}
+body section#hypermedia-rockband > section.songs section.song-list article {
+  padding: 50px;
+  display: flex;
+  flex: 1;
+}
+body section#hypermedia-rockband > section.songs section.song-list article > img {
+  flex-shrink: 0;
+  display: block;
+  margin-right: 20px;
+}
+body section#hypermedia-rockband > section.songs section.song-list article > section {
+  display: block;
+}
+body section#hypermedia-rockband > section.songs section.song-list article > section p span {
+  color: #07253f;
+}
+body section#hypermedia-rockband > section.songs section.song-list article h3 {
+  flex: 1 1 0;
+  font-size: 42px;
+  justify-content: center;
+  margin: auto;
+}
+body section#hypermedia-rockband > section.songs section.song-list article h3 a {
+  text-decoration: none;
+  color: #282828 !important;
+}
+body section#hypermedia-rockband > section.songs form {
+  padding: 50px;
+  flex-grow: 0.1;
+  display: flex;
+  flex-direction: column;
+  background: #00bfff;
+}
+body section#hypermedia-rockband > section.songs form > section {
+  display: flex;
+  align-items: center;
+  height: 10vh;
+  justify-content: flex-start;
+  align-content: flex-start;
+}
+body section#hypermedia-rockband > section.songs form > section > label {
+  width: 180px;
+}
+body section#hypermedia-rockband > section.songs form > section > input,
+body section#hypermedia-rockband > section.songs form > section button {
+  flex: 1 1 0;
+  padding: 10px;
+  font-size: 16px;
+  font-family: "OrbitronMedium";
+  border: 0;
+}
+body section#hypermedia-rockband > section.songs form > section span.bpm {
+  display: inline-block;
+  width: 34px;
+  text-align: center;
 }

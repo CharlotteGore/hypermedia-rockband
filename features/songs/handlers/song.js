@@ -92,15 +92,27 @@ module.exports.handler = function (app, store){
 		var song = songs[req.params.slug];
 		var media = hypermediaCache[req.params.slug];
 
-		song.addInstrument(req.params.instrument, function(err, data){
+		if (!req.body.etag){
 
-			if(!err){
-				media.accepted('Instrument added', req, res);
-			} else {
-				media.error('A mysterious and terrifying error has occured' + err, req, res);
-			}
+			media.notAcceptable('Must have an etag', req, res);
 
-		});
+		} else if( req.body.etag !== song.get('etag')){
+
+			media.conflict('You have attempted to edit and outdated version of the resource', req, res);
+
+		} else {
+
+			song.addInstrument(req.params.instrument, function(err, data){
+
+				if(!err){
+					media.accepted('Instrument added', req, res);
+				} else {
+					media.error('A mysterious and terrifying error has occured' + err, req, res);
+				}
+
+			});
+
+		}
 
 	};
 
@@ -110,19 +122,5 @@ module.exports.handler = function (app, store){
 	app.put('/song/:slug/update-settings', loadSongBySlug, updateSongSettings );
 
 	app.post('/song/:slug/add/:instrument', loadSongBySlug, addInstrument);
-
-	app.post('/create-song', function(req, res){
-
-		var song = new Song({ name : 'Untitled'}, store);
-
-		song.save(function(err, data){
-
-			var media = new SongHypermedia( song );
-
-			media.created("Song successfully created", req, res);
-
-		});
-
-	});
 
 };
