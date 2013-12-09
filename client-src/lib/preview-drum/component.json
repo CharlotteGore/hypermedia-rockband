@@ -1,0 +1,6 @@
+{
+	"name" : "preview-drum",
+	"scripts" : [
+		"index.js"
+	]
+}

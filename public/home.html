@@ -75,33 +75,34 @@
 					<section class="drum-machines" hb-with="drummachine">
 						<article class="{{style}}">
 							<h2>{{name}} Drum Machine</h2>
+							<a href="#!/preview-drum{{url()}}">Edit machine</a>
 							<h3>Kick</h3>
 							<section hb-with="kick-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 							<h3>Snare</h3>
 							<section hb-with="snare-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 							<h3>Open Hi hat</h3>
 							<section hb-with="hihat-open-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 							<h3>Closed Hi Hat</h3>
 							<section hb-with="hihat-closed-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 							<h3>Crash</h3>
 							<section hb-with="crash-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 							<h3>High Toms</h3>
 							<section hb-with="tom-lo-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 							<h3>Low Toms</h3>
 							<section hb-with="tom-hi-pattern">
-								<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+								<button class="{{if(model.get('active'), 'active')}}"></button>
 							</section>
 						</article>
 					</section>
@@ -122,6 +123,7 @@
 							<article class="{{style}}">
 								<h2 if="is-lead">Lead Synth</h2>
 								<h2 if-not="is-lead">Bass Synth</h2>
+								<a href="#!/preview-synth{{url()}}">Preview</a>
 								<form hb-with-command="update-settings">
 									<fieldset>
 										<legend>Oscillator</legend>
@@ -165,6 +167,7 @@
 										<button hb-trigger="save">Save changes</button>
 									</section>							
 								</form>
+								<!--
 								<h4>Tracker</h4>
 								<section class="tracker" hb-with="tracker">
 									<section dblclick-to-edit>
@@ -175,7 +178,7 @@
 											<option value="eb">E&#9837;</option>
 											<option value="f">F</option>
 											<option value="g">G</option>
-											<option value="bb">BE&#9837;</option>
+											<option value="bb">B&#9837;</option>
 										</select>
 										<select if="is-lead" hb-bind="octave">
 											<option value="">--</option>
@@ -198,13 +201,7 @@
 										<button if="clean"></button>
 									</section>
 								</section>
-								<datalist id="notes">
-									<option value="C">
-									<option value="E&#9837;">
-									<option value="F">
-									<option value="G">
-									<option value="B&#9837;">
-								</datalist>
+								-->
 							</article>
 						</section>
 					</section>
@@ -214,12 +211,120 @@
 
 		</section>
 		<!-- preview of drum kit -->
-		<section  hb-with="previewDrum" if="active">
+		<section  hb-with="previewDrum" if="active" class="drum-preview">
 			<h2>Preview Drum machine</h2>
+			<section if-not="ready" class="controls">
+				<p if-not="error">Loading samples...</p>
+				<p if="error">Sample loading failed. Sucks to be you.</p>
+			</section>
+			<section if="ready" class="controls">
+				<button hb-trigger="play">Play</button>
+				<button hb-trigger="stop">Pause</button>
+				<label>BPM</label><input type="range" min="60" max="180" hb-bind="bpm"> {{bpm}}
+			</section>
+			<section class="drum-machines" >
+				<article class="{{style}}">
+					<h2>{{name}} Drum Machine</h2>
+					<a href="#!/preview-drum{{url()}}">Preview</a>
+					<h3>Beat</h3>
+					<section class="beat">
+						<button class="{{if-eq(model.get('position'), 1, 'active')}}"></button>
+						<button class="{{if-eq(model.get('position'), 2, 'active')}}"></button>
+						<button class="{{if-eq(model.get('position'), 3, 'active')}}"></button>
+						<button class="{{if-eq(model.get('position'), 4, 'active')}}"></button>
+						<button class="{{if-eq(model.get('position'), 5, 'active')}}"></button>
+						<button class="{{if-eq(model.get('position'), 6, 'active')}}"></button>	
+						<button class="{{if-eq(model.get('position'), 7, 'active')}}"></button>
+						<button class="{{if-eq(model.get('position'), 0, 'active')}}"></button>
+					</section>
+					<h3>Kick</h3>
+					<section hb-with="kick-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+					<h3>Snare</h3>
+					<section hb-with="snare-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+					<h3>Open Hi hat</h3>
+					<section hb-with="hihat-open-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+					<h3>Closed Hi Hat</h3>
+					<section hb-with="hihat-closed-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+					<h3>Crash</h3>
+					<section hb-with="crash-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+					<h3>High Toms</h3>
+					<section hb-with="tom-lo-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+					<h3>Low Toms</h3>
+					<section hb-with="tom-hi-pattern">
+						<button class="{{if(model.get('active'), 'active')}}" hb-click-toggle="active"></button>
+					</section>
+				</article>
+			</section>
 		</section>
 		<!-- preview of synth -->
-		<section hb-with="previewDrum" if="active">
-			<h2>Preview Synth</h2>
+		<section hb-with="previewSynth" if="active" class="synth-preview">
+			<header>
+				<h2>Preview Synth</h2>
+			</header>
+			<section class="controls">
+				<button hb-trigger="play">Play</button>
+				<button hb-trigger="stop">Pause</button>
+				<label>BPM</label><input type="range" min="60" max="180" hb-bind="bpm"> {{bpm}}
+			</section>
+			<section class="settings">
+				<form hb-with-command="update-settings">
+					<fieldset>
+						<legend>Oscillator</legend>
+						<section>
+							<label for="waveform">Waveform</label>
+							<select name="waveform"></select>
+						</section>
+					</fieldset>
+					<fieldset>
+						<legend>Filter</legend>
+						<section>
+							<label for="filter-frequency">Frequency</label>
+							<input type="range" min="0" max="20000" name="filter-frequency"><span>{{filter-frequency}}hz</span>
+						</section>
+						<section>
+							<label for="filter-resonance">Resonance</label>
+							<input type="range" min="0" max="100" step="0.01" name="filter-resonance"><span>{{filter-resonance}}gain</span>
+						</section>
+					</fieldset>
+					<fieldset>
+						<legend>Envelope</legend>
+						<section>
+							<label for="attack">Attack</label>
+							<input type="range" min="0" max="1000" name="attack"><span>{{attack}}ms</span>
+						</section>
+						<section>
+							<label for="decay">Decay</label>
+							<input type="range" min="0" max="1000" name="decay"><span>{{decay}}ms</span>
+						</section>
+						<section>
+							<label for="sustain">Sustain</label>
+							<input type="range" min="0" max="1" step="0.01" name="sustain"><span>{{sustain}}gain<span>
+						</section>
+						<section>
+							<label for="release">Release</label>
+							<input type="range" min="0" max="10000" name="release"><span>{{release}}ms</span>
+						</section>
+					</fieldset>
+					<section class="{{if(model.get('clean'), 'clean')}}">
+						<label>Save</label>
+						<button hb-trigger="save">Save changes</button>
+					</section>					
+				</form>
+			</section>
+			<section class="note-data" generate-tracker="tracker">
+			</section>
 		</section>
 	</section>
 <script src="/javascripts/hypermedia-rockband.js"></script>

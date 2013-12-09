@@ -68,16 +68,13 @@ body {
 
   section#hypermedia-rockband {
 
-  	display: flex;
-  	flex-direction: column;
-  	min-height: 100vh;
-
   	header {
   		display: flex;
 		background: @black;
 		color : @white;
 		justify-content: center;
 		padding: 20px;
+		-webkit-transform: rotateX(0deg);
 		h1 {
 			font-size: 80px;
 			text-shadow: 0px 0px 50px rgba(255,255,255,0.5);
@@ -90,6 +87,118 @@ body {
 
 	& > section {
 		display: flex;
+	}
+
+	& > section.synth-preview {
+
+		flex-direction: column;
+
+		section.settings {
+			-webkit-transform: rotateX(0deg);
+			form {
+
+				flex-direction : row;
+				fieldset {
+					-webkit-transform: rotateX(0deg);
+					flex: 1;
+				}
+
+				section.clean {
+					opacity : 0.2;
+				}
+			}
+		}
+
+		section.note-data {
+			display: flex;
+			padding: 20px;
+			-webkit-transform: rotateX(0deg);
+			button {
+				font-family: "OrbitronLight"
+			}
+
+			section.row {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 0;
+				justify-content: space-around;
+
+				span {
+					display: inline-block;
+					width: 30px;
+				}
+				button {
+					height: 10px;
+					outline : none;
+					&.active {
+						background: limegreen;
+						
+					}
+				}
+			}
+		}
+
+	}
+
+	& > section.drum-preview {
+		flex-direction: column;
+
+		section.controls {
+			display: flex;
+		}
+
+		section.drum-machines {
+			flex: 1 1 0;
+			display: flex;
+			flex-direction: column;
+
+			article {
+				display: flex;
+				flex-direction: column;
+				
+				align-content: stretch;
+				align-items: stretch;
+				padding: 20px;
+
+				h2 {
+					text-align: center;
+					background: rgb(245, 245, 245);
+					margin: 16px;
+					-webkit-transform: rotateX(-5deg) rotateY(10deg);
+				}
+
+				section {
+					display: flex;
+					align-content: stretch;
+					margin: 10px;
+					-webkit-transform: rotateX(0deg);
+
+					button {
+						flex-grow: 0.6;
+						height: 30px;
+						border: 0;
+						outline : none;
+					
+						&.active {
+							background: limegreen;
+							box-shadow: 0px 0px 20px limegreen;
+						}
+					}
+				}
+			}
+
+			section.beat {
+				button {
+					background : @white;
+				}
+				button.active {
+					background: orange;
+					box-shadow: 0px 0px 20px orange;
+				}
+			}
+
+		}
+
 	}
 
 	& > section.song {
@@ -137,6 +246,7 @@ body {
 								height: 30px;
 								border: 0;
 								outline : none;
+								cursor: normal;
 
 								&.active {
 									background: limegreen;
@@ -145,6 +255,7 @@ body {
 							}
 						}
 					}
+
 				}
 
 				section.synths{
@@ -216,6 +327,7 @@ body {
 								width: 0px;
 								background: @white;
 								height : 33px;
+
 							}
 
 							&:nth-child(4n+1){

@@ -8,7 +8,10 @@
     "green-mesa/hyperbone-model-with-io": "*",
     "green-mesa/hyperbone-view": "*",
     "green-mesa/hyperbone-router": "*",
-    "green-mesa/hyperbone-view-commands": "*"
+    "green-mesa/hyperbone-view-commands": "*",
+    "charlottegore/shared-context": "*",
+    "charlottegore/beat-master": "*",
+    "charlottegore/gather": "*"
   },
   "development": {},
   "license": "MIT",
@@ -17,12 +20,16 @@
     "index.js"
   ],
   "remotes": [],
-  "paths" : [
+  "paths": [
     "lib"
   ],
-  "local" : [
+  "local": [
     "hrb-extended-view-engine",
     "song-list",
-    "song"
+    "song",
+    "preview-drum",
+    "preview-synth",
+    "tracker-render",
+    "frequencies"
   ]
 }

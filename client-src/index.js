@@ -2,6 +2,8 @@ var Model = require('hyperbone-model-with-io').Model;
 var View = require('hrb-extended-view-engine').View;
 var Router = require('hyperbone-router').Router;
 
+var beatMaster = require('beat-master');
+
 // set up some basic Models here. Eventually they'll get shoved off into their own modules.
 
 var Instrument = Model.extend({
@@ -13,8 +15,8 @@ var Instrument = Model.extend({
 window.app = new Model({
 	songList : require('song-list'),
 	song : require('song'),
-	previewSynth : new Instrument(),
-	previewDrum : new Instrument()
+	previewSynth : require('preview-synth'),
+	previewDrum : require('preview-drum')
 });
 
 // initialise our view now. Give it the data we need later.
@@ -29,6 +31,8 @@ router
 	.route('/songs', app.get('songList'))
 		.on('activate', function (ctx, uri){
 
+			beatMaster.off().stop();
+
 			var songList = app.get('songList');
 
 			songList
@@ -42,6 +46,8 @@ router
 	.route('/song/:slug', app.get('song'))
 		.on('activate', function (ctx, uri){
 
+			beatMaster.off().stop();
+
 			var song = app.get('song');
 
 			song
@@ -52,27 +58,32 @@ router
 				})
 				.fetch()
 		})
-	.route('/drummachine/:slug', app.get('previewDrum'))
+	.route('/preview-drum/*', app.get('previewDrum'))
 		.on('activate', function (ctx, uri){
+
+			beatMaster.off().stop();
 
 			var previewDrum = app.get('previewDrum');
 
 			previewDrum
-				.url( uri )
+				.url( uri.replace('/preview-drum', '') )
 				.set({
+					'samples-loaded' : false,
 					loading: true,
 					loaded : false
 				})
 				.fetch()
 
 		})
-	.route('/synth/:slug', app.get('previewSynth'))
+	.route('/preview-synth/*', app.get('previewSynth'))
 		.on('activate', function(ctx, uri){
+
+			beatMaster.off().stop();
 
 			var previewSynth = app.get('previewSynth');
 
 			previewSynth
-				.url(uri)
+				.url( uri.replace('/preview-synth', '')  )
 				.set({
 					loading: true,
 					loaded : false

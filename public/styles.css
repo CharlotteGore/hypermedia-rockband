@@ -91,17 +91,13 @@ body form > section button {
   font-family: "OrbitronMedium";
   border: 0;
 }
-body section#hypermedia-rockband {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
 body section#hypermedia-rockband header {
   display: flex;
   background: #282828;
   color: #ffffff;
   justify-content: center;
   padding: 20px;
+  -webkit-transform: rotateX(0deg);
 }
 body section#hypermedia-rockband header h1 {
   font-size: 80px;
@@ -112,6 +108,94 @@ body section#hypermedia-rockband header h2 {
 }
 body section#hypermedia-rockband > section {
   display: flex;
+}
+body section#hypermedia-rockband > section.synth-preview {
+  flex-direction: column;
+}
+body section#hypermedia-rockband > section.synth-preview section.settings {
+  -webkit-transform: rotateX(0deg);
+}
+body section#hypermedia-rockband > section.synth-preview section.settings form {
+  flex-direction: row;
+}
+body section#hypermedia-rockband > section.synth-preview section.settings form fieldset {
+  -webkit-transform: rotateX(0deg);
+  flex: 1;
+}
+body section#hypermedia-rockband > section.synth-preview section.settings form section.clean {
+  opacity: 0.2;
+}
+body section#hypermedia-rockband > section.synth-preview section.note-data {
+  display: flex;
+  padding: 20px;
+  -webkit-transform: rotateX(0deg);
+}
+body section#hypermedia-rockband > section.synth-preview section.note-data button {
+  font-family: "OrbitronLight";
+}
+body section#hypermedia-rockband > section.synth-preview section.note-data section.row {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  justify-content: space-around;
+}
+body section#hypermedia-rockband > section.synth-preview section.note-data section.row span {
+  display: inline-block;
+  width: 30px;
+}
+body section#hypermedia-rockband > section.synth-preview section.note-data section.row button {
+  height: 10px;
+  outline: none;
+}
+body section#hypermedia-rockband > section.synth-preview section.note-data section.row button.active {
+  background: limegreen;
+}
+body section#hypermedia-rockband > section.drum-preview {
+  flex-direction: column;
+}
+body section#hypermedia-rockband > section.drum-preview section.controls {
+  display: flex;
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines article {
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+  align-items: stretch;
+  padding: 20px;
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines article h2 {
+  text-align: center;
+  background: #f5f5f5;
+  margin: 16px;
+  -webkit-transform: rotateX(-5deg) rotateY(10deg);
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines article section {
+  display: flex;
+  align-content: stretch;
+  margin: 10px;
+  -webkit-transform: rotateX(0deg);
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines article section button {
+  flex-grow: 0.6;
+  height: 30px;
+  border: 0;
+  outline: none;
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines article section button.active {
+  background: limegreen;
+  box-shadow: 0px 0px 20px limegreen;
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines section.beat button {
+  background: #ffffff;
+}
+body section#hypermedia-rockband > section.drum-preview section.drum-machines section.beat button.active {
+  background: orange;
+  box-shadow: 0px 0px 20px orange;
 }
 body section#hypermedia-rockband > section.song {
   flex-direction: column;
@@ -153,6 +237,7 @@ body section#hypermedia-rockband > section.song > section > section section.drum
   height: 30px;
   border: 0;
   outline: none;
+  cursor: normal;
 }
 body section#hypermedia-rockband > section.song > section > section section.drum-machines article section button.active {
   background: limegreen;

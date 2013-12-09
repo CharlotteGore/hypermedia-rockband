@@ -1,0 +1,6 @@
+{
+	"name" : "tracker-render",
+	"scripts" : [
+		"index.js"
+	]
+}

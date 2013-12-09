@@ -6900,14 +6900,323 @@
       }
     };
   })
+  require.register("shared-context", function(exports, require, module) {
+    var context = false;
+    try {
+      if (window.AudioContext = window.AudioContext || window.webkitAudioContext) {
+        context = new AudioContext();
+      }
+    } catch (e) {
+      throw new Error("Web Audio API is not supported in this browser");
+    }
+    module.exports = context;
+  })
+  require.register("raf", function(exports, require, module) {
+    /**
+ * Expose `requestAnimationFrame()`.
+ */
+    exports = module.exports = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || fallback;
+    /**
+ * Fallback implementation.
+ */
+    var prev = new Date().getTime();
+    function fallback(fn) {
+      var curr = new Date().getTime();
+      var ms = Math.max(0, 16 - (curr - prev));
+      var req = setTimeout(fn, ms);
+      prev = curr;
+      return req;
+    }
+    /**
+ * Cancel.
+ */
+    var cancel = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.oCancelAnimationFrame || window.msCancelAnimationFrame || window.clearTimeout;
+    exports.cancel = function(id) {
+      cancel.call(window, id);
+    };
+  })
+  require.register("tick", function(exports, require, module) {
+    var raf = require("raf"), time = Date.now || function() {
+      return new Date().getTime();
+    }, start = time(), now;
+    // normalise the time functionality
+    if (window.performance && window.performance.now) {
+      now = function() {
+        return performance.now();
+      };
+      start = performance.timing.navigationStart;
+    } else {
+      now = function() {
+        return time() - start;
+      };
+    }
+    var callbacks = {};
+    var uuid = 0;
+    var runCallbacks = function(timestamp) {
+      var self = this;
+      for (i in callbacks) {
+        if (callbacks.hasOwnProperty(i)) {
+          callbacks[i].update(timestamp);
+        }
+      }
+      return true;
+    };
+    var Tick = function() {
+      var self = this;
+      var tick;
+      raf(function(elapsed) {
+        if (window.performance && window.performance.now) {
+          if (elapsed && /\./.test(elapsed.toString())) {
+            // requestAnimationFrame returns sexy sub-millisecond elapsed time
+            tick = function tick(timestamp) {
+              runCallbacks.call(self, timestamp);
+              raf(tick);
+            };
+          } else {
+            // requestAnimationFrame returns a lame unix timestamp. At least we've got performance.now() though.
+            tick = function tick() {
+              runCallbacks.call(self, performance.now());
+              raf(tick);
+            };
+          }
+        } else {
+          tick = function tick() {
+            runCallbacks.call(self, now());
+            raf(tick);
+          };
+        }
+        // go go go!
+        raf(tick);
+      });
+      return this;
+    };
+    Tick.prototype = {
+      add: function(task) {
+        var create = function(callback, start, stop) {
+          var paused = false;
+          var pausedAt;
+          return {
+            update: function(now) {
+              if (!paused) {
+                callback(now - start, stop);
+              }
+            },
+            pause: function() {
+              paused = true;
+              pausedAt = now();
+            },
+            resume: function() {
+              start = start + now() - pausedAt;
+              paused = false;
+            },
+            stop: stop
+          };
+        };
+        return function(callback) {
+          var id = ++uuid;
+          var stop = function() {
+            delete callbacks[id];
+          };
+          callbacks[id] = create(callback, now(), stop);
+          return {
+            id: id,
+            stop: stop,
+            pause: callbacks[id].pause,
+            resume: callbacks[id].resume
+          };
+        };
+      }(),
+      now: function() {
+        return now();
+      },
+      pause: function() {
+        for (i in callbacks) {
+          if (callbacks.hasOwnProperty(i)) {
+            callbacks[i].pause();
+          }
+        }
+      },
+      resume: function() {
+        for (i in callbacks) {
+          if (callbacks.hasOwnProperty(i)) {
+            callbacks[i].resume();
+          }
+        }
+      },
+      stop: function() {
+        for (i in callbacks) {
+          if (callbacks.hasOwnProperty(i)) {
+            callbacks[i].stop();
+          }
+        }
+      }
+    };
+    var tick = new Tick();
+    module.exports = tick;
+  })
+  require.register("extend", function(exports, require, module) {
+    /*
+ * @exports extend
+*/
+    /**
+  Extends a set of objects. Merges them into one new object
+  @public
+  @type Function
+  @param {Boolean} deep Should it extend all child objects
+  @param []{Object} splat objects to merge
+*/
+    function extend(deep) {
+      var out, objs, i, obj, prop, val;
+      out = {};
+      typeof deep === "boolean" ? (objs = [].slice.call(arguments, 1), deep = deep) : (objs = [].slice.call(arguments, 0), 
+      deep = false);
+      for (i = 0; i < objs.length; i++) {
+        obj = objs[i];
+        for (prop in obj) {
+          val = obj[prop];
+          if (deep && typeof val === "object" && typeof out[prop] === "object") {
+            out[prop] = extend(out[prop], val);
+          } else {
+            out[prop] = val;
+          }
+        }
+      }
+      return out;
+    }
+    module.exports = extend;
+  })
+  require.register("beat-master", function(exports, require, module) {
+    var tick = require("tick");
+    var ctx = require("shared-context");
+    var extend = require("extend");
+    var Events = require("backbone-events").Events;
+    function BeatMaster() {
+      var self = this;
+      // we create a dummy node to make sure that the
+      // webaudio time is actually updating..
+      var dummy = ctx.createGain();
+      dummy.connect(ctx.destination);
+      this.setBPM(120);
+    }
+    BeatMaster.prototype = {
+      start: function() {
+        var self = this;
+        this.handle = tick.add(function beatWrapper() {
+          var startTime = ctx.currentTime;
+          var beatTime = startTime;
+          return function beat(elapsed, stop) {
+            var now = ctx.currentTime, osc, envelope;
+            if (now > beatTime) {
+              beatTime = beatTime + self.webAudioBeatDuration;
+              self.trigger("next-beat-is-at", beatTime);
+            }
+          };
+        }());
+      },
+      stop: function() {
+        if (this.handle) {
+          this.handle.stop();
+        }
+      },
+      setBPM: function(bpm) {
+        this.beatsPerMin = bpm || 120;
+        this.msPerBeat = 6e4 / this.beatsPerMin;
+        this.webAudioBeatDuration = this.msPerBeat / 1e3;
+        return this;
+      }
+    };
+    var beatMaster = extend(new BeatMaster(), Events);
+    module.exports = beatMaster;
+  })
+  require.register("gather", function(exports, require, module) {
+    var READY = -1, COMPLETE = 0, FAILED = 1, Gatherer, checkTasks;
+    Gatherer = function Gatherer() {
+      this.reset();
+      return this;
+    };
+    checkTasks = function() {
+      var completed = this.tasksComplete + this.tasksFailed;
+      var count = this.tasks.length;
+      // post the percent complete..
+      this.fn.update(Math.ceil(100 * (completed / count)));
+      // and fire the complete callback when done, regardless of outcome
+      if (completed >= count) {
+        this.isComplete = true;
+        this.fn.complete(this.tasksFailed ? this.errors : null);
+      }
+      return;
+    };
+    Gatherer.prototype = {
+      reset: function() {
+        var self = this;
+        this.tasks = [];
+        this.fn = {
+          complete: function() {},
+          update: function() {}
+        };
+        this.isComplete = false;
+        this.tasksComplete = 0;
+        this.tasksFailed = 0;
+        this.errors = [];
+        return;
+      },
+      task: function(callback) {
+        var self = this, task = {
+          status: READY
+        }, done = function() {
+          task.status = COMPLETE;
+          self.tasksComplete++;
+          checkTasks.call(self);
+        }, error = function(err) {
+          task.status = FAILED;
+          self.tasksFailed++;
+          self.errors.push(err);
+          checkTasks.call(self);
+        };
+        task.fn = function() {
+          callback(done, error);
+        };
+        self.tasks.push(task);
+        return self;
+      },
+      run: function(callback, timeout) {
+        var self = this;
+        if (timeout) {
+          setTimeout(function() {
+            if (!self.isComplete) {
+              self.fn.complete("Error: Timed out");
+              self.fn.complete = function() {};
+            }
+          }, timeout);
+        }
+        self.fn.complete = callback;
+        // run the task callbacks...
+        for (var i = 0, il = self.tasks.length; i < il; i++) {
+          self.tasks[i].fn();
+        }
+        return self;
+      },
+      update: function(callback) {
+        this.fn.update = callback;
+        return this;
+      }
+    };
+    module.exports.gathering = function() {
+      return new Gatherer();
+    };
+  })
   require.register("hrb-extended-view-engine", function(exports, require, module) {
     var defaultViewEngine = require("hyperbone-view");
     defaultViewEngine.use(require("hyperbone-view-commands"));
+    defaultViewEngine.use(require("tracker-render"));
     defaultViewEngine.use({
       templateHelpers: {
         // any template helpers go here..
         "if": function(val, str) {
           return val ? str : "";
+        },
+        "if-eq": function(val, com, str) {
+          return val === com ? str : "";
         }
       },
       attributeHandlers: {}
@@ -6976,16 +7285,12 @@
             if (drum.get(type + "pattern")) {
               _.each(drum.get(type), function(val, i) {
                 drum.get(type + "pattern").at(i).set({
-                  machine: index,
-                  button: i,
                   active: val
                 });
               }, this);
             } else {
               _.each(drum.get(type), function(val, i) {
                 holders[type].push({
-                  machine: index,
-                  button: i,
                   active: val
                 });
               }, this);
@@ -6998,20 +7303,6 @@
           if (synth.get("style") === "lead") {
             synth.set("is-lead", true);
           }
-          // we want to remember which model it is for later...
-          synth.set({
-            clean: true,
-            machine: index
-          });
-          if (synth.get("intensity") === "") {
-            synth.set("intensity", 1);
-          }
-          synth.get("tracker").each(function(track) {
-            track.set({
-              clean: true,
-              machine: index
-            });
-          });
         });
         self.set("loaded", true);
         self.set("loading", false);
@@ -7022,146 +7313,476 @@
       "submit:update-settings": function(cmd, execute) {
         this.set("editing", false);
         execute();
-      },
-      "change:update-settings:synth": function(command) {
-        command._parentModel.set("clean", false);
-      },
-      "save:synth": function(model) {
-        model.set("clean", true);
-      },
-      "submit:update-settings:synth": function(cmd, execute) {
+      }
+    });
+    module.exports = song;
+  })
+  require.register("preview-drum", function(exports, require, module) {
+    var _ = require("underscore");
+    var Model = require("hyperbone-model-with-io").Model;
+    var ctx = require("shared-context");
+    var beatMaster = require("beat-master");
+    var DrumMachine = Model.extend({
+      syncCommands: true
+    });
+    var samples = {};
+    var drumPreview = new DrumMachine({
+      "samples-loaded": false,
+      bpm: 120
+    });
+    drumPreview.on({
+      sync: function() {
+        // load our samples...
         var self = this;
-        this.set("loading", true);
-        execute(function() {
-          self.fetch();
-        });
-      },
-      "change:note:tracker:synth change:octave:tracker:synth change:intensity:tracker:synth": function(model) {
-        if (!this.get("loading")) {
-          model.set("clean", false);
-        }
-      },
-      "commit-track:tracker:synth": function(model) {
-        // so this is a bit of a tricky one. For one, we get a reference to the tracker note but 
-        // because this doesn't have its own command we need to get a reference to teh parent 
-        // synth. 
-        // Then, to make matters worse, if someone changes a bunch of tracker notes and then clicks save,
-        // this instantly loses all the changes except for the ones we've just saved... so..
-        var self = this;
-        // remember we kept an reference to the index within the collection earlier?
-        var synth = this.get("synth").at(model.get("machine"));
-        var props = synth.command("update-tracker").properties();
-        var tracker = synth.get("tracker");
-        var batch = [];
-        tracker.each(function(track) {
-          if (!track.get("clean")) {
-            batch.push({
-              slot: track.get("slot"),
-              intensity: track.get("intensity"),
-              octave: track.get("octave"),
-              note: track.get("note")
-            });
-          }
-        });
-        if (batch.length > 1) {
-          props.set("batch", batch);
-        } else {
-          props.set({
-            note: model.get("note"),
-            octave: model.get("octave"),
-            intensity: model.get("intensity"),
-            slot: model.get("slot")
+        var gather = require("gather").gathering();
+        if (!this.get("samples-loaded")) {
+          this.set("ready", false);
+          _.each(this.rels(), function(link, rel) {
+            var name;
+            if (rel.indexOf("smp:") !== -1) {
+              name = rel.split("smp:")[1];
+              gather.task(function sampleLoader(done, error) {
+                var request = new XMLHttpRequest();
+                request.open("GET", link.href, true);
+                request.responseType = "arraybuffer";
+                request.onload = function() {
+                  ctx.decodeAudioData(request.response, function(buffer) {
+                    samples[name] = buffer;
+                    done();
+                  }, function() {
+                    error();
+                  });
+                };
+                request.onerror = function() {
+                  error();
+                };
+                request.send();
+              });
+            }
+          });
+          gather.run(function(err) {
+            if (!err) {
+              self.trigger("samples-loaded");
+              self.set({
+                ready: true,
+                "samples-loaded": true
+              });
+            } else {
+              self.set("error", true);
+            }
           });
         }
-        synth.execute("update-tracker", function() {
-          // we update the song after we're done
+        // copy the patterns into something easily understood by the view engine..
+        var holders = {};
+        _.each([ "kick", "snare", "hihat-open", "hihat-closed", "crash", "tom-hi", "tom-lo" ], function(type) {
+          holders[type] = [];
+          if (this.get(type + "pattern")) {
+            _.each(this.get(type), function(val, i) {
+              this.get(type + "pattern").at(i).set({
+                button: i,
+                active: val
+              });
+            }, this);
+          } else {
+            _.each(this.get(type), function(val, i) {
+              holders[type].push({
+                button: i,
+                active: val
+              });
+            }, this);
+            this.set(type + "-pattern", holders[type]);
+          }
+        }, this);
+        this.set({
+          loaded: true,
+          loading: false
+        });
+      }
+    });
+    drumPreview.on({
+      "samples-loaded": function() {
+        var beat = 0, self = this;
+        this.compressor = ctx.createDynamicsCompressor();
+        this.compressor.connect(ctx.destination);
+        beatMaster.off().on("next-beat-is-at", function(start) {
+          var position = beat % 8;
+          self.set("position", position);
+          beat++;
+          _.each([ "kick", "snare", "hihat-open", "hihat-closed", "crash", "tom-hi", "tom-lo" ], function(drum) {
+            if (self.get(drum)[position]) {
+              var sample = ctx.createBufferSource();
+              sample.buffer = samples[drum];
+              sample.connect(self.compressor);
+              sample.start(start);
+            }
+          });
+        });
+      },
+      "change:bpm": function(model, val) {
+        beatMaster.setBPM(val);
+      },
+      play: function() {
+        beatMaster.stop();
+        beatMaster.start();
+      },
+      stop: function() {
+        beatMaster.stop();
+      },
+      "change:active:kick-pattern": function(model, val) {
+        var self = this;
+        var arr = this.get("kick");
+        arr[model.get("button")] = val;
+        self.set("loading", true);
+        this.set("kick", arr);
+        this.command("update-kick").properties().set("kick", arr);
+        this.execute("update-kick", function() {
           self.fetch();
         });
       },
-      "change:active:kick-pattern:drummachine": function(model, val) {
+      "change:active:snare-pattern": function(model, val) {
         var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("kick");
+        var arr = this.get("snare");
         arr[model.get("button")] = val;
-        drum.command("update-kick").properties().set("kick", arr);
         self.set("loading", true);
-        drum.execute("update-kick", function() {
+        this.set("snare", arr);
+        this.command("update-snare").properties().set("snare", arr);
+        this.execute("update-snare", function() {
           self.fetch();
         });
       },
-      "change:active:snare-pattern:drummachine": function(model, val) {
+      "change:active:hihat-open-pattern": function(model, val) {
         var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("snare");
+        var arr = this.get("hihat-open");
         arr[model.get("button")] = val;
-        drum.command("update-snare").properties().set("snare", arr);
         self.set("loading", true);
-        drum.execute("update-snare", function() {
+        this.set("hihat-open", arr);
+        this.command("update-hihat-open").properties().set("hihat-open", arr);
+        this.execute("update-hihat-open", function() {
           self.fetch();
         });
       },
-      "change:active:hihat-open-pattern:drummachine": function(model, val) {
+      "change:active:hihat-closed-pattern": function(model, val) {
         var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("hihat-open");
+        var arr = this.get("hihat-closed");
         arr[model.get("button")] = val;
         self.set("loading", true);
-        drum.command("update-hihat-open").properties().set("hihat-open", arr);
-        drum.execute("update-hihat-open", function() {
+        this.set("hihat-closed", arr);
+        this.command("update-hihat-closed").properties().set("hihat-closed", arr);
+        this.execute("update-hihat-closed", function() {
           self.fetch();
         });
       },
-      "change:active:hihat-closed-pattern:drummachine": function(model, val) {
+      "change:active:crash-pattern": function(model, val) {
         var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("hihat-closed");
+        var arr = this.get("crash");
         arr[model.get("button")] = val;
         self.set("loading", true);
-        drum.command("update-hihat-closed").properties().set("hihat-closed", arr);
-        drum.execute("update-hihat-closed", function() {
+        this.set("crash", arr);
+        this.command("update-crash").properties().set("crash", arr);
+        this.execute("update-crash", function() {
           self.fetch();
         });
       },
-      "change:active:crash-pattern:drummachine": function(model, val) {
+      "change:active:tom-hi-pattern": function(model, val) {
         var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("crash");
+        var arr = this.get("tom-hi");
         arr[model.get("button")] = val;
         self.set("loading", true);
-        drum.command("update-crash").properties().set("crash", arr);
-        drum.execute("update-crash", function() {
+        this.set("tom-hi", arr);
+        this.command("update-tom-hi").properties().set("tom-hi", arr);
+        this.execute("update-tom-hi", function() {
           self.fetch();
         });
       },
-      "change:active:tom-hi-pattern:drummachine": function(model, val) {
+      "change:active:tom-lo-pattern": function(model, val) {
         var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("tom-hi");
+        var arr = this.get("tom-lo");
         arr[model.get("button")] = val;
         self.set("loading", true);
-        drum.command("update-tom-hi").properties().set("tom-hi", arr);
-        drum.execute("update-tom-hi", function() {
-          self.fetch();
-        });
-      },
-      "change:active:tom-lo-pattern:drummachine": function(model, val) {
-        var self = this;
-        var drum = this.get("drummachine").at(model.get("machine"));
-        var arr = drum.get("tom-lo");
-        arr[model.get("button")] = val;
-        self.set("loading", true);
-        drum.command("update-tom-lo").properties().set("tom-lo", arr);
-        drum.execute("update-tom-lo", function() {
+        this.set("tom-lo", arr);
+        this.command("update-tom-lo").properties().set("tom-lo", arr);
+        this.execute("update-tom-lo", function() {
           self.fetch();
         });
       }
     });
-    module.exports = song;
+    module.exports = drumPreview;
+  })
+  require.register("preview-synth", function(exports, require, module) {
+    var Model = require("hyperbone-model-with-io").Model;
+    var ctx = require("shared-context");
+    var beatMaster = require("beat-master");
+    var frequencies = require("frequencies");
+    var waves = {
+      sine: 0,
+      triangle: 3,
+      square: 1,
+      saw: 2
+    };
+    var Synth = Model.extend({
+      syncCommands: true
+    });
+    var synthPreview = new Synth({
+      bpm: 120
+    });
+    var compressor = ctx.createDynamicsCompressor();
+    compressor.connect(ctx.destination);
+    var filter = ctx.createBiquadFilter();
+    filter.connect(compressor);
+    function adsr(start, attack, decay, sustain, release, duration) {
+      var a = attack / 1e3;
+      var d = decay / 1e3;
+      var r = release / 1e3;
+      var s = parseFloat(sustain, 10);
+      this.gain.setValueAtTime(0, start);
+      this.gain.linearRampToValueAtTime(1, start + a);
+      this.gain.exponentialRampToValueAtTime(s, start + a + d);
+      this.gain.setTargetValueAtTime(0, start + duration, r);
+    }
+    synthPreview.on({
+      sync: function() {
+        this.set({
+          loading: false,
+          loaded: true,
+          clean: true
+        });
+        this.trigger("tracker-refresh-required");
+        this.trigger("ready-for-synth");
+      },
+      "ready-for-synth": function() {
+        var beat = 0, self = this;
+        beatMaster.off().on("next-beat-is-at", function(start) {
+          var position = beat % 64;
+          beat++;
+          self.set("position", position);
+          var track = self.get("tracker").at(position);
+          var note = track.get("note");
+          var octave = track.get("octave");
+          var freq;
+          if (note !== "") {
+            if (freq = frequencies[note][octave]) {
+              // assignment on purpose
+              var osc = ctx.createOscillator();
+              var envelope = ctx.createGain();
+              envelope.gain.setValueAtTime(0, 0);
+              var attack = self.get("attack");
+              var decay = self.get("decay");
+              var release = self.get("release");
+              envelope.connect(filter);
+              osc.connect(envelope);
+              osc.type = waves[self.get("waveform")];
+              osc.frequency.value = freq;
+              osc.start(0);
+              osc.stop(start + .5 + release + 1e3);
+              adsr.call(envelope, start, attack, decay, self.get("sustain"), release, .5);
+              setTimeout(function() {
+                envelope.disconnect();
+              }, release + 1500);
+            }
+          }
+        });
+      },
+      "change:waveform": function() {},
+      "change:filter-frequency": function(model, val) {
+        filter.frequency.value = val;
+      },
+      "change:filter-resonance": function(model, val) {
+        filter.Q.value = val;
+      },
+      "change:bpm": function(model, val) {
+        beatMaster.setBPM(val);
+      },
+      play: function() {
+        beatMaster.stop();
+        beatMaster.start();
+      },
+      stop: function() {
+        beatMaster.stop();
+      },
+      "user-toggle-note": function(slot, octave, note) {
+        var self = this;
+        var track = this.get("tracker").at(slot);
+        if (track.get("note") === note && track.get("octave") === octave) {
+          track.set({
+            octave: "",
+            note: ""
+          });
+        } else {
+          track.set({
+            octave: octave,
+            note: note
+          });
+        }
+        this.command("update-tracker").properties().set({
+          slot: track.get("slot"),
+          octave: octave,
+          note: note,
+          intensity: 1
+        });
+        this.execute("update-tracker", function() {
+          self.fetch();
+        });
+      },
+      "execution-failed": function(err, data) {
+        debugger;
+      },
+      "save:synth": function() {
+        this.set("clean", true);
+      },
+      "change:update-settings": function(command) {
+        this.set("clean", false);
+      },
+      "submit:update-settings": function(cmd, execute) {
+        this.set("loading", true);
+        execute();
+      }
+    });
+    module.exports = synthPreview;
+  })
+  require.register("tracker-render", function(exports, require, module) {
+    var dom = require("dom");
+    var _ = require("underscore");
+    module.exports = {
+      attributeHandlers: {
+        "generate-tracker": function(node, prop, cancel) {
+          cancel();
+          $node = dom(node);
+          var model = this.model;
+          var currentStyle = "";
+          var buttons = [];
+          var lookup = {};
+          var buildTracker = function buildTracker() {
+            var schema = model.command("update-tracker").get("schema").toJSON();
+            var octaves = schema.octave;
+            var validNotes = schema.note.options;
+            var slots = schema.slot.max;
+            var slotData;
+            for (var slot = -1; slot < slots; slot++) {
+              var row = dom("<section></section>");
+              row.addClass("row");
+              if (!lookup[slot + 1]) lookup[slot + 1] = {};
+              $node.append(row);
+              for (var octave = octaves.max; octave > octaves.min - 1; octave--) {
+                if (!lookup[slot + 1][octave]) lookup[slot + 1][octave] = {};
+                var notes = validNotes.length;
+                while (validNotes[--notes]) {
+                  note = validNotes[notes];
+                  if (note.value !== "") {
+                    if (slot === -1) {
+                      var span = dom("<span>" + note.name + octave + "</span>");
+                      row.append(span);
+                    } else {
+                      var button = dom("<button></button>");
+                      button.on("click", function(slot, octave, note) {
+                        return function toggleNote(e) {
+                          dom(this).addClass("active");
+                          model.trigger("user-toggle-note", slot, octave, note);
+                        };
+                      }(slot, octave, note.value));
+                      row.append(button);
+                      lookup[slot + 1][octave][note.value] = button;
+                      buttons.push(button);
+                    }
+                  }
+                }
+              }
+            }
+          };
+          var activate = function() {
+            model.off("add-command:update-tracker", activate);
+            model.on("tracker-refresh-required", function() {
+              $node.find("button.active").removeClass("active");
+              model.get("tracker").each(function(track) {
+                var note = track.get("note");
+                var octave = track.get("octave");
+                var slot = track.get("slot");
+                if (note !== "") {
+                  var button = lookup[slot][octave][note];
+                  button.addClass("active");
+                }
+              });
+            });
+            model.on("change:style", function(model, val) {
+              if (val !== currentStyle) {
+                _.each(buttons, function(button) {
+                  button.off("click");
+                });
+                buttons = [];
+                lookup = {};
+                $node.empty();
+                buildTracker();
+                currentStyle = val;
+              }
+            });
+          };
+          // we wait until the command exists before generating the HTML for the first time..
+          model.on("add-command:update-tracker", activate);
+        }
+      },
+      "render-tracker-as-canvas": function(node, val, prop) {
+        debugger;
+      }
+    };
+  })
+  require.register("frequencies", function(exports, require, module) {
+    module.exports = {
+      c: {
+        0: 16.351597831287414,
+        1: 32.70319566257483,
+        2: 65.40639132514966,
+        3: 130.8127826502993,
+        4: 261.6255653005986,
+        5: 523.2511306011972,
+        6: 1046.5022612023945,
+        7: 2093.004522404789
+      },
+      eb: {
+        0: 19.445436482630058,
+        1: 38.890872965260115,
+        2: 77.78174593052023,
+        3: 155.56349186104046,
+        4: 311.12698372208087,
+        5: 622.2539674441618,
+        6: 1244.5079348883237,
+        7: 2489.0158697766474
+      },
+      f: {
+        0: 21.826764464562746,
+        1: 43.653528929125486,
+        2: 87.30705785825097,
+        3: 174.61411571650194,
+        4: 349.2282314330039,
+        5: 698.4564628660078,
+        6: 1396.9129257320155,
+        7: 2793.825851464031
+      },
+      g: {
+        0: 24.499714748859326,
+        1: 48.999429497718666,
+        2: 97.99885899543733,
+        3: 195.99771799087463,
+        4: 391.99543598174927,
+        5: 783.9908719634985,
+        6: 1567.981743926997,
+        7: 3135.9634878539946
+      },
+      bb: {
+        0: 29.13523509488062,
+        1: 58.27047018976124,
+        2: 116.54094037952248,
+        3: 233.08188075904496,
+        4: 466.1637615180899,
+        5: 932.3275230361799,
+        6: 1864.6550460723597,
+        7: 3729.3100921447194
+      }
+    };
   })
   require.register("hypermedia-rockband", function(exports, require, module) {
     var Model = require("hyperbone-model-with-io").Model;
     var View = require("hrb-extended-view-engine").View;
     var Router = require("hyperbone-router").Router;
+    var beatMaster = require("beat-master");
     // set up some basic Models here. Eventually they'll get shoved off into their own modules.
     var Instrument = Model.extend({
       syncCommands: true
@@ -7170,8 +7791,8 @@
     window.app = new Model({
       songList: require("song-list"),
       song: require("song"),
-      previewSynth: new Instrument(),
-      previewDrum: new Instrument()
+      previewSynth: require("preview-synth"),
+      previewDrum: require("preview-drum")
     });
     // initialise our view now. Give it the data we need later.
     new View({
@@ -7180,26 +7801,31 @@
     });
     var router = new Router();
     router.route("/songs", app.get("songList")).on("activate", function(ctx, uri) {
+      beatMaster.off().stop();
       var songList = app.get("songList");
       songList.url(uri).set({
         loading: true,
         loaded: false
       }).fetch();
     }).route("/song/:slug", app.get("song")).on("activate", function(ctx, uri) {
+      beatMaster.off().stop();
       var song = app.get("song");
       song.url(uri).set({
         loading: true,
         loaded: false
       }).fetch();
-    }).route("/drummachine/:slug", app.get("previewDrum")).on("activate", function(ctx, uri) {
+    }).route("/preview-drum/*", app.get("previewDrum")).on("activate", function(ctx, uri) {
+      beatMaster.off().stop();
       var previewDrum = app.get("previewDrum");
-      previewDrum.url(uri).set({
+      previewDrum.url(uri.replace("/preview-drum", "")).set({
+        "samples-loaded": false,
         loading: true,
         loaded: false
       }).fetch();
-    }).route("/synth/:slug", app.get("previewSynth")).on("activate", function(ctx, uri) {
+    }).route("/preview-synth/*", app.get("previewSynth")).on("activate", function(ctx, uri) {
+      beatMaster.off().stop();
       var previewSynth = app.get("previewSynth");
-      previewSynth.url(uri).set({
+      previewSynth.url(uri.replace("/preview-synth", "")).set({
         loading: true,
         loaded: false
       }).fetch();

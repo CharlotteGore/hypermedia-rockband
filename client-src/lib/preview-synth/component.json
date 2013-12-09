@@ -1,0 +1,6 @@
+{
+	"name" : "preview-synth",
+	"scripts" : [
+		"index.js"
+	]
+}
