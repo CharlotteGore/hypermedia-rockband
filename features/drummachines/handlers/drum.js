@@ -97,8 +97,6 @@ module.exports.handler = function (app, store){
 			forDrum = req.params.drum;
 			pattern = req.body[forDrum];
 
-			console.log(forDrum, pattern);
-
 		} else if (req.body.drum){
 
 			forDrum = req.body.drum;

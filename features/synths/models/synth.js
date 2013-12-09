@@ -87,7 +87,7 @@ var styles = {
 		},
 		"octave" : {
 			type : "range",
-			min : 0,
+			min : 1,
 			max : 3
 		},
 		"intensity" : {
@@ -132,8 +132,6 @@ var Synth = function( data, store ){
 		});
 	}
 
-	this.populate(data);
-
 	this.schema = {
 		settings : {
 			waveform : {
@@ -173,7 +171,7 @@ var Synth = function( data, store ){
 			"filter-resonance": {
 				type: "range",
 				min: 0,
-				max: 1
+				max: 100
 			},
 			attack: {
 				type: "range",
@@ -196,8 +194,10 @@ var Synth = function( data, store ){
 				max: 10000
 			}
 		},
-		tracker : styles[this.get('style')]
+		tracker : styles[this.attributes.style]
 	};
+
+	this.populate(data);
 };
 
 Synth.prototype = {
@@ -206,6 +206,10 @@ Synth.prototype = {
 	},
 	set : function(attr, val){
 		this.attributes[attr] = val;
+		return this;
+	},
+	setStyle : function(){
+		this.schema.tracker = styles[this.attributes.style];
 		return this;
 	},
 	updateSettings : function (data){
@@ -358,6 +362,7 @@ Synth.prototype = {
 	},
 	populate : function (data){
 		_.extend(this.attributes, data);
+		this.setStyle(this.attributes.style);
 		return this;
 	}
 };
