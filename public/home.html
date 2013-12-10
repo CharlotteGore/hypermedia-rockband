@@ -38,7 +38,6 @@
 		</section>
 		<!-- A Song -->
 		<section class="song {{if(model.get('loading'), 'loading')}}" hb-with="song" if="active">
-
 			<header>
 				<h2 if-not="editing">{{name}}</h2>
 				<button if-not="editing" hb-click-toggle="editing">Edit Song Information</button>
@@ -60,6 +59,9 @@
 					</form>
 				</section>
 			</header>
+			<section class="controls" if="samples-loaded">
+				<button hb-trigger="play">Play</button><button hb-trigger="stop">Stop</button>
+			</section>
 			<section>
 				<section>
 					<form hb-with-command="add-electro-drum-machine">
@@ -75,6 +77,7 @@
 					<section class="drum-machines" hb-with="drummachine">
 						<article class="{{style}}">
 							<h2>{{name}} Drum Machine</h2>
+							<input hb-bind="volume" type="range" min="0" max="1" step="0.1">
 							<a href="#!/preview-drum{{url()}}">Edit machine</a>
 							<h3>Kick</h3>
 							<section hb-with="kick-pattern">
@@ -123,85 +126,22 @@
 							<article class="{{style}}">
 								<h2 if="is-lead">Lead Synth</h2>
 								<h2 if-not="is-lead">Bass Synth</h2>
+								<input hb-bind="volume" type="range" min="0" max="1" step="0.1">
 								<a href="#!/preview-synth{{url()}}">Preview</a>
-								<form hb-with-command="update-settings">
-									<fieldset>
-										<legend>Oscillator</legend>
-										<section>
-											<label for="waveform">Waveform</label>
-											<select name="waveform"></select>
-										</section>
-									</fieldset>
+								<form>
 									<fieldset>
 										<legend>Filter</legend>
 										<section>
 											<label for="filter-frequency">Frequency</label>
-											<input type="range" min="0" max="20000" name="filter-frequency"><span>{{filter-frequency}}hz</span>
+											<input type="range" min="0" max="20000" hb-bind="filter-frequency"><span>{{filter-frequency}}hz</span>
 										</section>
 										<section>
 											<label for="filter-resonance">Resonance</label>
-											<input type="range" min="0" max="1" step="0.01" name="filter-resonance"><span>{{filter-resonance}}gain</span>
+											<input type="range" min="0" max="100" hb-bind="filter-resonance"><span>{{filter-resonance}}gain</span>
 										</section>
 									</fieldset>
-									<fieldset>
-										<legend>Envelope</legend>
-										<section>
-											<label for="attack">Attack</label>
-											<input type="range" min="0" max="1000" name="attack"><span>{{attack}}ms</span>
-										</section>
-										<section>
-											<label for="decay">Decay</label>
-											<input type="range" min="0" max="1000" name="decay"><span>{{decay}}ms</span>
-										</section>
-										<section>
-											<label for="sustain">Sustain</label>
-											<input type="range" min="0" max="1" step="0.01" name="sustain"><span>{{sustain}}gain<span>
-										</section>
-										<section>
-											<label for="release">Release</label>
-											<input type="range" min="0" max="10000" name="release"><span>{{release}}ms</span>
-										</section>
-									</fieldset>	
-									<section if-not="clean">
-										<label>Save</label>
-										<button hb-trigger="save">Save changes</button>
-									</section>							
+						
 								</form>
-								<!--
-								<h4>Tracker</h4>
-								<section class="tracker" hb-with="tracker">
-									<section dblclick-to-edit>
-										<span class="slot">{{slot}}</span>
-										<select hb-bind="note">
-											<option value="">--</option>
-											<option value="c">C</option>
-											<option value="eb">E&#9837;</option>
-											<option value="f">F</option>
-											<option value="g">G</option>
-											<option value="bb">B&#9837;</option>
-										</select>
-										<select if="is-lead" hb-bind="octave">
-											<option value="">--</option>
-											<option value=2>2</option>
-											<option value=3>3</option>
-											<option value=4>4</option>
-											<option value=5>5</option>
-											<option value=6>6</option>
-											<option value=7>7</option>
-										</select>
-										<select if-not="is-lead" hb-bind="octave">
-											<option value="">--</option>
-											<option value=0>0</option>
-											<option value=1>1</option>
-											<option value=2>2</option>
-											<option value=3>3</option>
-										</select>
-										<input hb-bind="intensity" type="range" min="0" max="1" step="0.01"><span>{{intensity}} gain</span>
-										<button if-not="clean" hb-trigger="commit-track">Save</button>
-										<button if="clean"></button>
-									</section>
-								</section>
-								-->
 							</article>
 						</section>
 					</section>
@@ -225,7 +165,6 @@
 			<section class="drum-machines" >
 				<article class="{{style}}">
 					<h2>{{name}} Drum Machine</h2>
-					<a href="#!/preview-drum{{url()}}">Preview</a>
 					<h3>Beat</h3>
 					<section class="beat">
 						<button class="{{if-eq(model.get('position'), 1, 'active')}}"></button>
@@ -295,7 +234,7 @@
 						</section>
 						<section>
 							<label for="filter-resonance">Resonance</label>
-							<input type="range" min="0" max="100" step="0.01" name="filter-resonance"><span>{{filter-resonance}}gain</span>
+							<input type="range" min="0" max="100"  name="filter-resonance"><span>{{filter-resonance}}gain</span>
 						</section>
 					</fieldset>
 					<fieldset>

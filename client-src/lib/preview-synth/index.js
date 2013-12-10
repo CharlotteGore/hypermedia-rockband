@@ -113,10 +113,12 @@ synthPreview.on({
 
 	'change:filter-frequency' : function(model, val){
 		filter.frequency.value = val;
+		console.log(val);
 	},
 
 	'change:filter-resonance' : function(model, val){
 		filter.Q.value = val;
+		console.log(val);
 	},
 
 	'change:bpm' : function(model, val){

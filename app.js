@@ -29,7 +29,7 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-
+// require all the features... could probably automate this but didn't have time..
 require('./shared/store').Store({ db : 'hyperdev'}, function (err, db){
 
 	_.each(['drummachines/drum', 'synths/synth', 'songs/song', 'songs/songs'], function( str ){
@@ -41,23 +41,6 @@ require('./shared/store').Store({ db : 'hyperdev'}, function (err, db){
 
 app.get('/', function(req, res){
 	res.sendfile('./public/home.html');
-});
-
-app.get('/api', function(req, res){
-
-	res.send(200, {
-		_links : {
-			"create-drum" : {
-				href : "/create-drum-machine"
-			},
-			"create-synth" : {
-				href : '/create-synth'
-			},
-			'create-song' : {
-				href : '/create-song'
-			}
-		}
-	});
 });
 
 http.createServer(app).listen(app.get('port'), function (){
